@@ -309,9 +309,10 @@ Two paths coexist:
   the `demo` source), signs a fresh `FoobarCredential` JWT, and pushes it
   back to HKU's identity hub.
 
-A small Python helper (`add-tier-claim.py`) re-signs the preloaded
-MembershipCredential JWTs to inject the `participantTier` claim, using
-the issuer's Ed25519 private key.
+The preloaded MembershipCredential JWTs were re-signed with the issuer's
+Ed25519 private key to inject the `participantTier` claim; the resulting
+tokens are checked into `deployment/assets/credentials/k8s/<role>/membership-credential.json`
+for each participant.
 
 ### 5.4 Federated Catalog crawler
 
@@ -538,11 +539,13 @@ csc4240-hk-federated-dataspace/      # fork of eclipse-edc/MinimumViableDataspac
 ├── launchers/dataplane/             # build.gradle.kts: + AWS S3 dataplane
 ├── gradle/libs.versions.toml        # + edc-aws version
 └── final/                           # CSC4240 deliverables
-    ├── scripts/                     # 10 end-to-end demo scripts
-    ├── screenshots/                 # captured evidence (24 files)
+    ├── scripts/                     # 8 demo scripts + federated-crawler.sh
+    │                                #   + minio-deploy.yaml
+    ├── screenshots/                 # 24 captured evidence files
+    ├── diagrams/                    # scenario / architecture / pipeline (mmd + png)
+    ├── materials/                   # design + plan documents
     ├── slides/                      # final-presentation.pptx
-    ├── report/                      # this report + figures
-    └── BACKGROUND-NOTES.md          # design rationale notes
+    └── report/                      # this report + figures
 ```
 
 ---
