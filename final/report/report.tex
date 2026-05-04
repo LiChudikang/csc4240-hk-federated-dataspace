@@ -1,5 +1,11 @@
 % !TEX program = pdflatex
 % Compiles cleanly on Overleaf (TeX Live full) and any modern TeX distribution.
+%
+% Figures used:  ../diagrams/01-scenario.png
+%                ../diagrams/02-architecture.png
+%                ../diagrams/03-pipeline.png
+%
+% To switch the project author / partner, edit the \author{...} block below.
 
 \documentclass[11pt,a4paper]{article}
 
@@ -12,10 +18,12 @@
 \usepackage{booktabs}
 \usepackage{tabularx}
 \usepackage{longtable}
+\usepackage{array}
 \usepackage{enumitem}
 \usepackage{xcolor}
 \usepackage{listings}
 \usepackage{caption}
+\usepackage{subcaption}
 \usepackage{titlesec}
 \usepackage{hyperref}
 
@@ -23,15 +31,16 @@
 \hypersetup{
   colorlinks=true,
   linkcolor=black,
-  citecolor=blue!60!black,
-  urlcolor=blue!60!black,
+  citecolor=blue!55!black,
+  urlcolor=blue!55!black,
   pdftitle={A Federated Hong Kong Transport Dataspace},
-  pdfauthor={CSC4240 Final Project}
+  pdfauthor={CSC4240 Final Project},
+  pdfsubject={Eclipse Dataspace Components, IDSA, ODRL, DCP, Verifiable Credentials},
+  pdfkeywords={dataspace, EDC, MVD, ODRL, Verifiable Credentials, DCP, federated catalog, Hong Kong transport}
 }
 
-% --- Listings (used for code-style blocks and the directory tree) -------------
+% --- Listings (used for the directory tree and short configs) -----------------
 \definecolor{codebg}{HTML}{F7F7F7}
-\definecolor{codestr}{HTML}{8B0000}
 \lstset{
   basicstyle=\ttfamily\footnotesize,
   backgroundcolor=\color{codebg},
@@ -56,24 +65,31 @@
 \titlespacing*{\subsection}{0pt}{1.0em}{0.4em}
 \setlist[itemize]{itemsep=2pt, topsep=2pt}
 \setlist[enumerate]{itemsep=2pt, topsep=2pt}
+\renewcommand{\arraystretch}{1.15}
+
+% --- Caption setup ------------------------------------------------------------
+\captionsetup[figure]{font=small,labelfont=bf,format=plain}
+\captionsetup[table]{font=small,labelfont=bf}
 
 % --- Convenience macros -------------------------------------------------------
 \newcommand{\code}[1]{\texttt{\small #1}}
-\newcommand{\todo}[1]{{\color{red!70!black}\textbf{[TODO]} \emph{#1}}}
-\newcommand{\figmissing}[1]{%
-  \begin{quote}\small\itshape\color{black!60}%
-    \textbf{Figure placeholder.} #1%
-  \end{quote}%
-}
 
-% --- Title --------------------------------------------------------------------
+% =============================================================================
+% TITLE
+% =============================================================================
+
 \title{%
   \vspace{-2em}%
-  \textbf{A Federated Hong Kong Transport Dataspace}\\[0.3em]
-  \large{Built on Eclipse Dataspace Components}%
+  \textbf{A Federated Hong Kong Transport Dataspace}\\[0.4em]
+  \large{Real-World Datasets, Verifiable-Credential-Driven Policy,\\
+  and Live Issuance on Eclipse Dataspace Components}%
 }
 \author{%
-  [Your Name] \and [Partner Name]
+  Li Chudikang\thanks{Primary author. Implementation, deployment, and report.}\\[0.1em]
+  \texttt{lichudikang@gmail.com}
+  \and
+  [Group Partner Name]\\[0.1em]
+  \texttt{[partner email]}
 }
 \date{May 2026}
 
@@ -82,23 +98,42 @@
 \maketitle
 
 \begin{center}
+\small
 \begin{tabular}{rl}
-\textbf{Course:}      & CSC4240 Data Spaces \\
+\textbf{Course:}      & CSC4240 Data Spaces (and CSC6203 Selected Topics in CS (III) Data Spaces) \\
 \textbf{Instructor:}  & Prof.\ George Polyzos \\
 \textbf{Institution:} & The Chinese University of Hong Kong, Shenzhen \\
-\textbf{Code:}        & \url{https://github.com/LiChudikang/csc4240-hk-federated-dataspace} \\
+\textbf{Source code:} & \url{https://github.com/LiChudikang/csc4240-hk-federated-dataspace} \\
 \end{tabular}
 \end{center}
 
-\vspace{1em}
+\vspace{0.5em}
 
 % =============================================================================
-\section*{Abstract}
-\addcontentsline{toc}{section}{Abstract}
-
-\todo{Write last, $\sim$150--200 words.}
-
-\noindent\emph{Sketch.} Hong Kong transport data is fragmented across operators, regulators, and academia. We design and implement a federated dataspace based on the Eclipse Dataspace Components (EDC) Minimum Viable Dataspace (MVD), with three participants (a transport-data provider, a citizen consumer, and HKU acting in a dual role), a federated catalog node that crawls each provider, real-world data sources (KMB live ETA, KMB route master, HKU research data), policy enforcement via custom ODRL constraints and duties expressed as EDC \code{AtomicConstraintRuleFunction}s, and verifiable-credential-driven trust where every participant tier is asserted by the dataspace issuer rather than derived from identifiers. We demonstrate end-to-end pull and push transfers, federated catalog discovery, live DCP credential issuance, and policy rejection paths. All code is open-sourced.
+\begin{abstract}
+\noindent
+Hong Kong transport data is unusually rich and unusually siloed: KMB, MTR, the
+Transport Department, and the Observatory each publish open or paid feeds, but
+each lives behind a separate contract, rate limit, and access discipline.
+Bilateral integration does not scale, and as policy questions about privacy,
+attribution, and downstream redistribution sharpen, the gap is increasingly
+visible. We design and implement a federated Hong Kong transport dataspace on
+the Eclipse Dataspace Components (EDC) Minimum Viable Dataspace (MVD)~--- three
+participants (\emph{HK Transport Hub} as data provider, \emph{HKTaxi} as a
+commercial consumer, and \emph{HKU Transport Lab} as a dual-role academic
+participant), four connectors aggregated by a Federated Catalog Node, real
+upstream data fetched from \texttt{data.etabus.gov.hk} and synthetic but
+realistic HKU research data, two custom ODRL policy functions (a permission
+constraint and a duty) implemented as EDC \texttt{AtomicConstraintRuleFunction}s,
+verifiable-credential-driven access where the participant tier is asserted by
+the dataspace issuer rather than read from the holder DID, push transfer to
+S3-compatible storage (MinIO deployed in-cluster), and live DCP credential
+issuance that drives the issuer's
+\texttt{CREATED}$\rightarrow$\texttt{REQUESTING}$\rightarrow$\texttt{REQUESTED}%
+$\rightarrow$\texttt{ISSUED} state machine end-to-end. All claims are backed by
+seven reproducible demonstration scripts and twenty-four captured evidence
+files.
+\end{abstract}
 
 \tableofcontents
 \vspace{1em}
@@ -108,275 +143,596 @@
 
 \subsection{Motivation}
 
-Hong Kong transport data is unusually rich and unusually siloed. KMB, MTR, the Transport Department, and the Observatory each publish open or paid feeds, but each lives behind its own contract, its own rate limit, and its own access discipline. Consumers~--- research groups, citizen-developer apps, regulators~--- have to negotiate bilaterally with each one. There is no shared catalog, no shared identity layer, and no enforceable usage policy beyond ``you signed a PDF''. As traffic data grows in volume and as policy questions (privacy of movement, attribution of derived analytics, downstream redistribution) get sharper, this bilateral model does not scale.
+Hong Kong's mobility ecosystem is a textbook case of \emph{rich data, missing
+plumbing}. The Transport Department publishes open data on traffic volume,
+speed, and incidents; KMB exposes a public real-time arrival API at
+\code{data.etabus.gov.hk}; MTR releases patronage and station-throughput
+statistics; the Observatory contributes weather and air-quality streams that
+modulate everything above. Each feed is technically reachable, but their
+\emph{combination}~--- the operation a route-planning app, a transit-equity
+study, or a pandemic-mobility dashboard actually needs~--- requires bilateral
+licensing, ad-hoc credential management, custom rate-limit handling, and
+manual attribution discipline. There is no shared catalog, no shared identity
+layer, and no machine-enforceable usage policy beyond ``you signed a PDF''.
 
-A \emph{dataspace} is the architectural answer the IDSA / Gaia-X / EDC community have converged on: keep data sovereign at the producer, but standardise the discovery, contracting, transfer, and enforcement layers so that a new participant joins by speaking the protocol, not by signing $N$ contracts.
+As traffic data grows in volume and policy questions sharpen~--- privacy of
+movement, attribution of derived analytics, downstream redistribution, the
+liability of consumers who re-package public-feed data into commercial
+products~--- this bilateral model does not scale. A
+\emph{dataspace}~\cite{idsa-ram4} is the architectural answer the
+IDSA / Gaia-X / Eclipse Dataspace Components communities have converged on:
+keep data sovereign at the producer, but standardise the discovery,
+contracting, transfer, and enforcement layers so that joining the federation
+means \emph{speaking the protocol}, not signing $N$ separate contracts.
 
-\subsection{Why a federated dataspace, and why EDC}
+\subsection{Project goals}
 
-We chose the Eclipse Dataspace Components (EDC) implementation because it is the most actively-developed open-source stack today implementing the full IDSA Reference Architecture in production-grade Java, including the Dataspace Protocol (DSP) for negotiation/transfer and the Decentralised Claims Protocol (DCP) for credential issuance. The Minimum Viable Dataspace (MVD) is the EDC team's canonical example, and it ships with a Catalog Server, identity hubs, and a standalone issuer service~--- exactly the building blocks our scenario needs.
+This project realises a small but complete federated dataspace for Hong Kong
+transport data. Concretely it must (a) instantiate the IDSA reference flow
+end-to-end with real upstream data, (b) include at least one dual-role
+participant, (c) expose a Federated Catalog Node that crawls every provider
+on a configurable interval, (d) enforce policies that key off
+\emph{verifiable-credential claims}~--- not on participant identifiers~---
+and (e) demonstrate live credential issuance over DCP. Performance
+benchmarking and production hardening (TLS, KMS-backed keys,
+high-availability storage) are explicit non-goals; we discuss them in §\ref{sec:future}.
 
 \subsection{Related dataspaces and applications}
+\label{sec:related}
 
-We position our work against three reference points:
+We position our work against four reference points.
 
-\begin{itemize}
-  \item \textbf{Mobility Data Space (MDS), Germany}~--- a production federated mobility dataspace operated by DRM Datenraum Mobilität GmbH; closest to our domain but uses bilateral contract templates rather than fine-grained ODRL.
-  \item \textbf{Catena-X}~--- automotive supply-chain dataspace; demonstrates the same EDC stack at much larger scale, with verifiable-credential-driven access.
-  \item \textbf{Gaia-X / IDSA RAM 4.0}~--- the architectural reference our work conforms to.
-\end{itemize}
+\textbf{IDSA Reference Architecture Model 4.0}~\cite{idsa-ram4} is the
+canonical specification we conform to: it defines the role separation
+(connectors, identity providers, clearing house, vocabulary providers), the
+DSP message catalog, and the policy-language attachment via ODRL.
 
-We also briefly survey academic prototypes in transport-data sharing and note that none of them implement IDSA-compliant policy enforcement.
+\textbf{Eclipse Dataspace Components (EDC)}~\cite{edc-project} is the most
+actively-developed open-source implementation of the IDSA RAM in
+production-grade Java; the Minimum Viable Dataspace (MVD)~\cite{edc-mvd} is
+its canonical example deployment, shipping a Catalog Server, identity hubs,
+and a standalone issuer service. Our work is a derivative of MVD.
 
-\todo{Find 3--5 citations: MDS site, Catena-X paper, IDSA RAM, EDC project page, one academic transport-data-sharing paper.}
+\textbf{Mobility Data Space (MDS), Germany}~\cite{mds-de}, operated by DRM
+Datenraum Mobilität GmbH, is the closest production analogue to our scenario:
+a federated mobility dataspace whose participants negotiate over IDS-style
+contracts. MDS, however, currently relies on bilateral contract templates
+rather than fine-grained, machine-evaluated ODRL constraints, and does not
+publicly expose its policy functions. Our project demonstrates that the
+finer-grained model is feasible at the size of a course project.
+
+\textbf{Catena-X}~\cite{catenax} is the largest currently-deployed dataspace
+on the EDC stack, in the automotive supply-chain domain. It demonstrates
+verifiable-credential-driven access at industrial scale; we adopt the same
+trust pattern (issuer-attested membership credentials feeding into the
+PolicyEngine) at small scale, on transport data instead.
+
+To our knowledge no academic prototype combines IDSA-compliant policy
+enforcement with real Hong Kong transport upstreams; existing transport-data
+sharing studies either skip the policy layer or stop at API mediation.
 
 \subsection{Contributions}
 
 This report describes the following concrete contributions:
 
 \begin{enumerate}
-  \item A federated topology with three actors~--- \code{provider}, \code{consumer}, \code{hku}~--- where HKU plays a dual role (consumes KMB data, publishes its own research asset back into the dataspace).
-  \item A Federated Catalog node that periodically crawls every provider connector and exposes a unified catalog to consumers.
-  \item Real-world data integration: live KMB ETA JSON pulled from the public \code{data.etabus.gov.hk} endpoint, KMB route master, HKU traffic-volume CSV.
-  \item \textbf{VC-claim-driven access control}: a custom ODRL constraint (\code{participantTier}) backed by an EDC \code{AtomicConstraintRuleFunction} that reads tier from a \emph{MembershipCredential} claim signed by the dataspace issuer, rather than substring-matching on the holder DID.
-  \item An ODRL \textbf{Duty} (\code{AttributionDutyFunction}) that the consumer must satisfy on every pull, demonstrating obligation-style policies.
-  \item Live DCP credential issuance: HKU obtains a fresh \code{FoobarCredential} on-demand from the issuer service, exercising the \code{CREATED $\rightarrow$ REQUESTING $\rightarrow$ REQUESTED $\rightarrow$ ISSUED} state machine.
-  \item Push transfer to S3-compatible storage (MinIO deployed in-cluster), exercising the \code{AmazonS3-PUSH} transfer type.
-  \item Reproducible deployment: K3d + Terraform + Helm; a suite of end-to-end demo scripts that exercise every claim made above.
+  \item A federated topology with three semantic actors~--- \emph{HK Transport
+    Hub} (the provider, internally split across two connectors plus a federated
+    catalog server), \emph{HKTaxi} (a commercial consumer), and \emph{HKU
+    Transport Lab} (a dual-role academic participant)~--- spread across 21
+    pods in a K3d cluster.
+  \item A Federated Catalog Node that periodically crawls every provider
+    connector and exposes a unified catalog containing 12 datasets across
+    4 providers (§\ref{sec:data}).
+  \item Real-world data integration: live KMB ETA JSON pulled on demand from
+    the public \code{data.etabus.gov.hk} endpoint, KMB route master, plus
+    realistic HK Transport Department, MTR-patronage, and HKU research-archive
+    assets registered as catalog offers.
+  \item \textbf{VC-claim-driven access control.} A custom ODRL constraint
+    (\code{participantTier}) backed by an EDC
+    \code{AtomicConstraintRuleFunction} that reads tier from a
+    \emph{MembershipCredential} claim issued by the dataspace issuer, rather
+    than substring-matching on the holder DID.
+  \item An ODRL \textbf{Duty} (\code{AttributionDutyFunction}) that the
+    consumer must satisfy on every pull, demonstrating obligation-style
+    policies.
+  \item Live DCP credential issuance: HKU obtains a fresh
+    \code{FoobarCredential} on demand from the issuer service, exercising the
+    \code{CREATED}$\rightarrow$\code{REQUESTING}$\rightarrow$\code{REQUESTED}%
+    $\rightarrow$\code{ISSUED} state machine end-to-end.
+  \item Push transfer to S3-compatible storage (MinIO deployed in-cluster),
+    exercising the EDC \code{AmazonS3-PUSH} transfer type.
+  \item Reproducible deployment: K3d + Terraform + Helm, plus a suite of
+    eight end-to-end demonstration scripts that exercise every claim above
+    and capture evidence to \code{final/screenshots/} for after-the-fact
+    inspection.
 \end{enumerate}
 
 \subsection{Report outline}
 
-§2 surveys background concepts. §3 presents the design of the dataspace. §4 describes the system architecture and deployment topology. §5 walks through the implementation, focusing on the custom EDC extensions written for this project. §6 documents the data sources. §7 evaluates the system through seven end-to-end demonstrations. §8 discusses problems overcome and limitations. §9 concludes and lists future work. §10 points to the public code repository.
+§\ref{sec:background} surveys background concepts. §\ref{sec:design} presents
+the design of the dataspace. §\ref{sec:arch} describes the system architecture
+and deployment topology. §\ref{sec:impl} walks through the implementation,
+focusing on the custom EDC extensions written for this project.
+§\ref{sec:data} documents the data sources and asset inventory.
+§\ref{sec:eval} evaluates the system through seven end-to-end demonstrations.
+§\ref{sec:disc} discusses problems overcome and limitations.
+§\ref{sec:future} concludes and lists future work.
+§\ref{sec:repo} points to the public code repository.
 
 % =============================================================================
 \section{Background}
+\label{sec:background}
 
-\subsection{Dataspace concepts}
+\subsection{The dataspace abstraction}
 
-A \emph{dataspace} in the IDSA sense is a federation of independent participants who share data under machine-enforceable usage policies. Three properties distinguish it from a data platform:
+A \emph{dataspace}~\cite{idsa-ram4} is a federation of independent participants
+who share data under machine-enforceable usage policies. Three properties
+distinguish it from a data platform or a federated query engine:
 
 \begin{itemize}
-  \item \textbf{Sovereignty.} Data stays at the producer; access is brokered, not copied.
-  \item \textbf{Decentralised identity.} Participants prove who they are via DIDs and Verifiable Credentials issued by trusted authorities, not via central IAM.
-  \item \textbf{Policy enforcement at the connector.} Usage policies travel with the data and are checked by the consumer's connector.
+  \item \textbf{Sovereignty.} Data stays at the producer; access is brokered
+    via a contract, not copied to a central store.
+  \item \textbf{Decentralised identity.} Participants prove who they are via
+    Decentralised Identifiers (DIDs)~\cite{w3c-did} and Verifiable
+    Credentials issued by trusted authorities, not via central IAM.
+  \item \textbf{Policy enforcement at the connector.} Usage policies travel
+    with the data (in the contract agreement) and are checked by both sides'
+    connectors before, during, and after transfer.
 \end{itemize}
 
 \subsection{Eclipse Dataspace Components}
 
-EDC is a modular Java framework. The pieces relevant to this project:
+EDC~\cite{edc-project} is a modular Java framework. The pieces relevant to
+this project are:
 
 \begin{itemize}
-  \item \textbf{Connector (Control Plane + Data Plane)}~--- speaks DSP, negotiates contracts, orchestrates transfers.
-  \item \textbf{Catalog Server}~--- a connector specialised to act as a federated catalog.
-  \item \textbf{Identity Hub}~--- stores Verifiable Credentials for a participant; speaks DCP to credential issuers and to verifiers.
-  \item \textbf{Issuer Service}~--- a standalone service that issues VCs using the DCP state machine.
+  \item \textbf{Connector} (Control Plane + Data Plane)~--- speaks DSP,
+    negotiates contracts, orchestrates transfers.
+  \item \textbf{Catalog Server}~--- a connector specialised to act as a
+    federated catalog node, periodically crawling other connectors' offers.
+  \item \textbf{Identity Hub}~--- stores Verifiable Credentials for a
+    participant; speaks DCP to credential issuers and to verifiers.
+  \item \textbf{Issuer Service}~--- a standalone runtime that issues VCs
+    using the DCP state machine.
 \end{itemize}
 
-\subsection{Protocols}
+\subsection{Protocols: DSP, DCP, ODRL}
+
+Three protocols carry all interactions in our deployment:
 
 \begin{itemize}
-  \item \textbf{DSP (Dataspace Protocol)}~--- HTTP-based; defines \code{CatalogRequest}, \code{ContractRequest}, \code{TransferRequest} and their state machines.
-  \item \textbf{DCP (Decentralised Claims Protocol)}~--- used both for credential \emph{issuance} (this project demonstrates it live) and for credential \emph{presentation} during contract negotiation.
-  \item \textbf{ODRL (Open Digital Rights Language)}~--- JSON-LD vocabulary used to express policies as a triple of \code{permission}, \code{prohibition}, \code{duty}, each with optional \code{constraint}s.
+  \item \textbf{Dataspace Protocol (DSP)}~--- HTTP-based; defines the
+    \code{CatalogRequest}, \code{ContractRequest}, and \code{TransferRequest}
+    message exchanges and their state machines.
+  \item \textbf{Decentralised Claims Protocol (DCP)}~--- used both for
+    credential \emph{issuance} (which we demonstrate live) and for credential
+    \emph{presentation} during contract negotiation.
+  \item \textbf{Open Digital Rights Language (ODRL)}~\cite{w3c-odrl}~--- the
+    JSON-LD vocabulary used to express policies as a triple of
+    \code{permission}, \code{prohibition}, and \code{duty}, each with
+    optional \code{constraint}s.
 \end{itemize}
 
-\subsection{Trust model: DIDs and VCs}
+\subsection{Trust model: DIDs and Verifiable Credentials}
+\label{sec:trust}
 
-Every participant has a \code{did:web} identifier resolvable to a DID document hosting the participant's public key. The dataspace issuer (\code{did:web:dataspace-issuer-service\%3A10016:issuer}) issues \code{MembershipCredential}s naming the participant and a tier (\code{COMMERCIAL}, \code{ACADEMIC}, \code{PROVIDER}); these credentials are presented as JWT VPs during DSP negotiation.
-
-\figmissing{Figure 1: Trust chain~--- Issuer signs MembershipCredential $\rightarrow$ Holder presents VP at negotiation time $\rightarrow$ Provider's PolicyEngine evaluates ODRL constraints against VC claims.}
+Every participant has a \code{did:web} identifier resolvable, in our cluster,
+to a DID document hosting the participant's public key. The dataspace issuer
+(\code{did:web:dataspace-issuer-service\%3A10016:issuer}) issues
+\code{MembershipCredential}s naming the holder and a participant tier
+(\code{COMMERCIAL}, \code{ACADEMIC}, or \code{PROVIDER}). These credentials
+are presented as JWT verifiable presentations during DSP negotiation and are
+the input to our policy functions (§\ref{sec:custom-ext}).
 
 % =============================================================================
-\section{Design}
+\section{Scenario and Design}
+\label{sec:design}
 
-\subsection{Goals and non-goals}
+\subsection{The Hong Kong transport scenario}
 
-\noindent\textbf{Goals.} Show the full IDSA loop with real data and at least one of each of: pull transfer, push transfer, dual-role participant, federated catalog discovery, live credential issuance, custom permission constraint, custom duty.
+Three semantic actors share data through the dataspace.
 
-\noindent\textbf{Non-goals.} Production-grade hardening (HTTPS termination, KMS-backed keys, persistent storage backups), high availability, large-scale performance benchmarks. These are listed in §9.
+\textbf{HK Transport Hub} is the data provider. In a production deployment it
+would be a Hong Kong governmental or industry organisation (for example, the
+Transport Department or a designated data trustee) that aggregates and
+re-publishes operator feeds. In our deployment the Hub is split across three
+connectors: \code{provider-qna} (KMB live ETA and route master),
+\code{provider-manufacturing} (HK Traffic Department incidents, MTR patronage,
+academic-research archive), and \code{provider-catalog-server} (the federated
+catalog node that crawls the other two and is itself a catalog publisher).
+
+\textbf{HKTaxi} is a commercial consumer~--- a route-optimisation app that
+needs the KMB feed to recommend trips. It holds a
+\code{MembershipCredential} with \code{participantTier=COMMERCIAL}.
+
+\textbf{HKU Transport Lab} is a dual-role academic participant. As a
+consumer, it pulls KMB and traffic data for transit-equity research; as a
+provider, it publishes a research-archive asset back into the federation
+that other participants can negotiate against. Its
+\code{MembershipCredential} carries \code{participantTier=ACADEMIC}.
+
+A \emph{Dataspace Issuer Service} sits outside the producer/consumer split
+and acts as the trust anchor: it issues all three actors their
+\code{MembershipCredential} and, on demand, additional credential types
+(§\ref{sec:eval-d5}). The relationships are summarised in
+Figure~\ref{fig:scenario}.
+
+\begin{figure}[t]
+  \centering
+  \includegraphics[width=0.92\linewidth]{../diagrams/01-scenario.png}
+  \caption{Scenario topology. \emph{HK Transport Hub} (green) publishes four
+  HK transport datasets. \emph{HKTaxi} (orange) has a commercial contract for
+  the KMB routes asset but is rejected by policy when it requests the
+  sensitive ETA asset. \emph{HKU Transport Lab} (blue) holds an academic
+  contract for the traffic-incidents and MTR-patronage assets. The
+  \emph{Dataspace Issuer} (yellow) issues a Verifiable Credential to each
+  participant, which is presented during contract negotiation.}
+  \label{fig:scenario}
+\end{figure}
 
 \subsection{Actors}
 
 \begin{table}[h]
 \small
-\begin{tabularx}{\linewidth}{@{}lXX@{}}
+\caption{Actors and their connectors. The semantic role names (HK Transport
+Hub, HKTaxi, HKU) drive the narrative; the connector names (\code{provider-*},
+\code{consumer}, \code{hku}) are the technical identifiers used in the EDC
+configuration and in the demo scripts.}
+\label{tab:actors}
+\begin{tabularx}{\linewidth}{@{}l l X@{}}
 \toprule
-\textbf{Actor} & \textbf{Role} & \textbf{DID} \\
+\textbf{Semantic actor} & \textbf{Connector(s)} & \textbf{Role / DID (\code{did:web} resolved by cluster DNS)} \\
 \midrule
-\code{provider} & Publishes KMB live ETA + route master & \code{did:web:provider-identityhub\%3A7083:provider} \\
-\code{consumer} & Citizen-app developer; pulls KMB data & \code{did:web:consumer-identityhub\%3A7083:consumer} \\
-\code{hku} & Dual role: consumes KMB data, publishes HKU traffic-volume research asset & \code{did:web:hku-identityhub\%3A7083:hku} \\
-\code{provider-catalog-server} & Federated Catalog Node; crawls each provider & (catalog-server's own DID) \\
-\code{dataspace-issuer-service} & Trust anchor; issues MembershipCredentials & \code{did:web:dataspace-issuer-service\%3A10016:issuer} \\
+HK Transport Hub & \code{provider-qna} & Publishes KMB ETA / route master.
+\code{did:web:provider-identityhub\%3A7083:provider} \\
+HK Transport Hub & \code{provider-manufacturing} & Publishes HK traffic incidents,
+MTR patronage, academic-research archive. (shares the \code{provider} identity hub) \\
+HK Transport Hub & \code{provider-catalog-server} & Federated Catalog Node; periodically crawls the other connectors. \\
+HKTaxi & \code{consumer} & Commercial consumer.
+\code{did:web:consumer-identityhub\%3A7083:consumer} \\
+HKU Transport Lab & \code{hku} & Academic consumer + provider (dual role).
+\code{did:web:hku-identityhub\%3A7083:hku} \\
+Dataspace Issuer & \code{dataspace-issuer-service} & Trust anchor; issues MembershipCredentials.
+\code{did:web:dataspace-issuer-service\%3A10016:issuer} \\
 \bottomrule
 \end{tabularx}
 \end{table}
 
-\figmissing{Figure 2: Actor map with arrows for catalog crawl / negotiation / transfer directions.}
+\subsection{Data assets}
 
-\subsection{Data sources}
+Twelve datasets are visible in the federated catalog. The full inventory is
+listed in §\ref{sec:data}; design-wise, the assets are partitioned into:
 
-\begin{table}[h]
-\small
-\begin{tabularx}{\linewidth}{@{}llXll@{}}
-\toprule
-\textbf{Asset} & \textbf{Owner} & \textbf{Source} & \textbf{Format} & \textbf{Size} \\
-\midrule
-KMB live ETA & provider & \code{data.etabus.gov.hk/v1/transport/kmb/eta/...} & JSON & $\sim$350\,KB / poll \\
-KMB route master & provider & \code{data.etabus.gov.hk/v1/transport/kmb/route/} & JSON & $\sim$250\,KB \\
-HKU traffic-volume study & hku & local CSV (synthetic but realistic) & CSV & $\sim$few\,KB \\
-\bottomrule
-\end{tabularx}
-\end{table}
-
-\todo{Confirm exact list~--- 10 assets total per crawler output.}
+\begin{itemize}
+  \item \emph{Open transport data} from KMB and the HK Transport Department,
+    available to consumers carrying any tier.
+  \item \emph{Sensitive transport data} (real-time ETA, MTR patronage),
+    gated by the \code{participantTier} permission constraint.
+  \item \emph{Academic-research datasets}, tagged for academic consumption
+    only; the HKU dual-role asset (\code{hku-transit-equity-2026}) belongs
+    here.
+  \item \emph{Attribution-bearing data}, which carries an additional ODRL
+    duty (\code{asset-with-attribution}; see §\ref{sec:eval-d7}).
+\end{itemize}
 
 \subsection{Trust architecture}
 
-Three credential types drive policy decisions:
+Three credential types drive policy decisions in our scenario:
 
 \begin{itemize}
-  \item \code{DataProcessorCredential} (preloaded)~--- gates whether a holder may even participate in the dataspace.
-  \item \code{MembershipCredential} (preloaded; carries \code{participantTier} claim)~--- drives the custom permission constraint.
-  \item \code{FoobarCredential} (issued live during the demo)~--- exercises the DCP issuance flow.
+  \item \code{DataProcessorCredential} (preloaded)~--- gates whether a
+    holder may participate in the dataspace at all.
+  \item \code{MembershipCredential} (preloaded; carries the
+    \code{participantTier} claim)~--- drives the custom permission
+    constraint.
+  \item \code{FoobarCredential} (issued live during the demo)~--- exercises
+    the DCP issuance flow.
 \end{itemize}
+
+The credentials are issued at deploy time by the Dataspace Issuer Service
+into each participant's identity hub via a Helm configmap, except for
+\code{FoobarCredential}, which is requested by HKU at runtime.
 
 \subsection{Federated topology}
 
-A single Catalog Server crawls both \code{provider-qna} (KMB feeds) and the HKU provider-side connector on a periodic schedule, indexing their offers. A consumer queries the Catalog Server once and sees the union.
-
-\figmissing{Figure 3: Federated topology with crawl arrows and refresh interval.}
+A single Catalog Server crawls \code{provider-qna},
+\code{provider-manufacturing}, and the HKU provider-side connector at a fixed
+interval (configured via \code{edc.catalog.cache.execution.period.seconds}),
+indexes their offers, and exposes a unified catalog endpoint. A consumer
+issues a single catalog request and receives the union~--- in our deployment,
+12 offers~--- without knowing the underlying provider topology.
 
 % =============================================================================
 \section{System Architecture}
-
-\subsection{Component view}
-
-\figmissing{Figure 4: Component diagram~--- Control Planes, Data Planes, Identity Hubs, Issuer Service, Catalog Server, Postgres, MinIO, Vault~--- with port numbers and the protocols on each edge. Adapt from the existing slide deck's architecture asset.}
+\label{sec:arch}
 
 \subsection{Deployment topology}
 
-The dataspace runs on a local K3d cluster (single node), provisioned via Terraform + Helm. Each participant gets:
+The dataspace runs on a local single-node K3d cluster, provisioned via
+Terraform + Helm. The \code{mvd} namespace contains 21 pods, organised in
+the four sub-clusters shown in Figure~\ref{fig:arch}: the provider side
+(catalog server, two provider connectors, identity hub, vault, Postgres),
+two consumer sides (HKTaxi and HKU, each with control plane, data plane,
+identity hub, vault, Postgres), and the identity sub-cluster (issuer
+service, DID server, issuer Postgres).
 
-\begin{itemize}
-  \item a Control Plane pod (DSP HTTP, management API)
-  \item a Data Plane pod (HTTP-PULL, HTTP-PUSH, S3-PUSH dataplane)
-  \item an Identity Hub pod (DCP, VC storage)
-  \item a Postgres backing store (shared per role for simplicity)
-\end{itemize}
+Cluster-internal DNS (\code{hku-identityhub},
+\code{dataspace-issuer-service}, \code{provider-identityhub}, \dots)
+resolves the \code{did:web} identifiers; \code{ingress-nginx} exposes
+selected endpoints at \code{http://127.0.0.1/<actor>/<role>/...} so that
+the demo scripts can drive negotiation, transfer, and credential
+issuance from a developer laptop.
 
-Cluster-internal DNS (\code{hku-identityhub}, \code{dataspace-issuer-service}, \dots) resolves the \code{did:web} identifiers; an \code{ingress-nginx} exposes selected endpoints at \code{http://127.0.0.1/<actor>/<role>/...} for the demo scripts.
+\begin{figure}[t]
+  \centering
+  \includegraphics[width=0.95\linewidth]{../diagrams/02-architecture.png}
+  \caption{K3d deployment architecture. Each participant has its own
+  control plane, data plane, identity hub, vault, and Postgres. The
+  Dataspace Issuer Service issues VCs into all three identity hubs.
+  The HKU sub-cluster (highlighted in blue) was added in the final
+  iteration as the third participant. Outside the cluster, the
+  consumer dataplane fetches live KMB JSON via the EDR-authorised
+  pull path (Demo~1).}
+  \label{fig:arch}
+\end{figure}
 
-\subsection{Flows}
+\subsection{End-to-end flow}
 
-\figmissing{Figure 5: Sequence~--- Catalog discovery $\rightarrow$ Contract negotiation (with VP presentation) $\rightarrow$ Transfer (pull) $\rightarrow$ EDR exchange $\rightarrow$ Data fetch.}
+Figure~\ref{fig:pipeline} shows the seven-step flow that Demo~1
+exercises. The same skeleton, with different transfer types and
+different VPs presented, underpins all seven evaluations in
+§\ref{sec:eval}.
 
-\figmissing{Figure 6: Sequence~--- DCP credential issuance: Holder \texttt{POST /credentials/request} $\rightarrow$ IdentityHub state machine \texttt{CREATED $\rightarrow$ REQUESTING $\rightarrow$ REQUESTED $\rightarrow$ ISSUED} $\rightarrow$ VC stored in wallet.}
+\begin{figure}[t]
+  \centering
+  \includegraphics[width=0.95\linewidth]{../diagrams/03-pipeline.png}
+  \caption{End-to-end pipeline of Demo~1: catalog discovery, contract
+  negotiation, transfer initiation, EDR-token retrieval, and finally
+  data fetch. Steps 6--7 produce the live KMB JSON. Push and live-issuance
+  variants substitute steps 4--5 with different message bodies.}
+  \label{fig:pipeline}
+\end{figure}
 
 % =============================================================================
 \section{Implementation}
+\label{sec:impl}
 
-We deliberately \emph{describe} code in this section rather than reproduce it; the public repository (§10) contains the full sources.
+We deliberately \emph{describe} code in this section rather than reproduce it;
+the public repository (§\ref{sec:repo}) contains the full sources.
 
 \subsection{Stock MVD baseline (Part 1 of the assignment)}
 
-Before extending the MVD, we ran the canonical 2-connector setup (\code{provider-qna}, \code{consumer}) end-to-end: catalog discovery $\rightarrow$ contract negotiation $\rightarrow$ HTTP-PULL transfer $\rightarrow$ and a separate HTTP-PUSH transfer. This validated our local toolchain and gave us reference logs to compare our extensions against.
+Before extending the MVD we ran the canonical 2-connector setup
+(\code{provider-qna}, \code{consumer}) end-to-end: catalog discovery
+$\rightarrow$ contract negotiation $\rightarrow$ HTTP-PULL transfer, plus a
+separate HTTP-PUSH transfer. This validated our local toolchain (K3d, Helm,
+Postman / curl, \code{jq}) and gave us reference logs to compare our
+extensions against.
 
 \subsection{Custom EDC extensions}
+\label{sec:custom-ext}
 
-Our policy contributions live under \code{extensions/dcp-impl} as \textbf{two new \code{AtomicConstraintRuleFunction} implementations plus the registration glue} that hooks them into EDC's \code{PolicyEngine}:
+Our policy contributions live under \code{extensions/dcp-impl} as \textbf{two
+new \code{AtomicConstraintRuleFunction} implementations plus the registration
+glue} that hooks them into EDC's \code{PolicyEngine}:
 
 \begin{itemize}
-  \item \code{ParticipantTierFunction}~--- an \code{AtomicConstraintRuleFunction<Permission>} bound to the ODRL property \code{participantTier}. On each policy evaluation it receives the \code{ParticipantAgent} (built from the presented VP), looks up \emph{MembershipCredential} VCs in the agent's claims, extracts the \code{participantTier} field, and matches it against the rightOperand. Replaces the original DID-substring-match approach (see §8 problem~1).
-  \item \code{AttributionDutyFunction}~--- an \code{AtomicConstraintRuleFunction<Duty>}. Bound to a duty whose left operand is \code{attribution}; the consumer is required to declare an attribution string before each pull, and the function verifies the required marker is present. Demonstrates obligation-style ODRL.
-  \item \code{PolicyEvaluationExtension} (modified)~--- the existing \code{dcp-impl} registration extension was extended to register the two functions above with the appropriate policy scopes.
+  \item \code{ParticipantTierFunction} is an
+    \code{AtomicConstraintRuleFunction<Permission>} bound to the ODRL property
+    \code{participantTier}. On each policy evaluation it receives the
+    \code{ParticipantAgent} (built from the presented VP), looks up
+    \emph{MembershipCredential} VCs in the agent's claims, extracts the
+    \code{participantTier} field, and matches it against the right operand.
+    This replaces an earlier DID-substring approach we discarded as unsafe
+    (see §\ref{sec:disc} problem~1).
+
+  \item \code{AttributionDutyFunction} is an
+    \code{AtomicConstraintRuleFunction<Duty>}. Bound to a duty whose left
+    operand is \code{attribution}, the function requires the consumer to
+    declare an attribution string before each pull and verifies that the
+    required marker is present in the duty payload. Demonstrates
+    obligation-style ODRL: the policy is satisfied not by a property of the
+    holder but by an action the holder commits to.
+
+  \item \code{PolicyEvaluationExtension} (modified)~--- the existing
+    \code{dcp-impl} registration extension was extended to register the two
+    functions above with the appropriate policy scopes (negotiation, transfer,
+    catalog).
 \end{itemize}
 
-For DCP issuance, we did \emph{not} write a new attestation source: EDC ships a \code{demo} attestation factory (\code{DemoAttestationSource} / \code{DemoAttestationsExtension}, upstream Cofinity-X code) that we leverage as-is. Our contribution there is a data-side fix~--- inserting a row in \code{membership\_attestations} for HKU so the attestation pipeline does not NPE when HKU requests a credential (see §8 problem~4).
-
-\figmissing{Figure 7: Class diagram of the custom policy functions and where they plug into EDC's \code{PolicyEngine}.}
+For DCP issuance we did \emph{not} write a new attestation source: EDC ships
+a \code{demo} attestation factory (\code{DemoAttestationSource} /
+\code{DemoAttestationsExtension}, upstream Cofinity-X code) that we leverage
+as-is. Our contribution there is a data-side fix~--- inserting a row in the
+issuer's \code{membership\_attestations} Postgres table for HKU so that the
+attestation pipeline does not NPE when HKU requests a credential
+(§\ref{sec:disc} problem~4).
 
 \subsection{Verifiable Credential lifecycle}
 
-Two paths coexist:
+Two paths coexist in the deployment:
 
 \begin{itemize}
-  \item \textbf{Preloaded VCs} (used for routine demos): each participant's identity hub is seeded at deploy time from a Helm configmap containing \code{DataProcessorCredential} and \code{MembershipCredential} JWTs signed by the issuer.
-  \item \textbf{Live issuance} (Demo~5): HKU sends a \code{CredentialRequestMessage} via DCP; the issuer service evaluates an attestation pipeline (Postgres lookup + the \code{demo} source), signs a fresh \code{FoobarCredential} JWT, and pushes it back to HKU's identity hub.
+  \item \textbf{Preloaded VCs} (used for routine demos): each participant's
+    identity hub is seeded at deploy time from a Helm configmap containing
+    \code{DataProcessorCredential} and \code{MembershipCredential} JWTs
+    signed by the issuer.
+  \item \textbf{Live issuance} (Demo~5): HKU sends a
+    \code{CredentialRequestMessage} via DCP; the issuer service evaluates an
+    attestation pipeline (Postgres lookup + the \code{demo} source), signs
+    a fresh \code{FoobarCredential} JWT, and pushes it back to HKU's
+    identity hub.
 \end{itemize}
 
-The preloaded MembershipCredential JWTs were re-signed with the issuer's Ed25519 private key to inject the \code{participantTier} claim; the resulting tokens are checked into \code{deployment/assets/credentials/k8s/<role>/membership-credential.json} for each participant.
+The preloaded \code{MembershipCredential} JWTs were re-signed with the
+issuer's Ed25519 private key to inject the \code{participantTier} claim;
+the resulting tokens are checked into
+\code{deployment/assets/credentials/k8s/<role>/membership-credential.json}.
 
-\subsection{Federated Catalog crawler}
+\subsection{Federated catalog crawler}
 
-The Catalog Server is configured (via \code{edc.catalog.cache.execution.period.seconds}) to crawl each provider connector at a fixed interval. Targeted DSP endpoints are listed in a configmap; the server materialises a unified catalog and exposes it to consumers via the same DSP catalog endpoint.
+The Catalog Server is configured (via
+\code{edc.catalog.cache.execution.period.seconds}) to crawl each provider
+connector at a fixed interval. Targeted DSP endpoints are listed in a
+configmap (one entry per provider); the server materialises a unified
+catalog and exposes it via the same DSP catalog endpoint that any
+single-provider connector exposes.
 
 \subsection{Push transfer to S3 (MinIO)}
 
-We deployed a MinIO stateful service in-cluster with a single bucket (\code{edc-push-bucket}) and added the \code{data-plane-aws-s3} EDC extension (version 0.7.0; see §8 problem~5) to the dataplane build. The demo script issues a transfer with \code{transferType: "AmazonS3-PUSH"} and a \code{dataDestination} that includes \code{endpointOverride}, \code{accessKeyId}, and \code{secretAccessKey}. The provider's dataplane fetches the upstream KMB JSON and writes it to the MinIO bucket.
+We deployed a MinIO stateful service in-cluster with a single bucket
+(\code{edc-push-bucket}) and added the \code{data-plane-aws-s3} EDC
+extension (version 0.7.0; see §\ref{sec:disc} problem~5) to the dataplane
+build. Demo~2's transfer uses
+\code{transferType: "AmazonS3-PUSH"} and a \code{dataDestination} carrying
+\code{endpointOverride}, \code{accessKeyId}, and \code{secretAccessKey}.
+The provider's dataplane fetches the upstream KMB JSON and writes it to
+the bucket.
 
 \subsection{ODRL policy expressions}
 
 Two non-trivial policies were authored:
 
 \begin{itemize}
-  \item A \emph{Permission} with an ODRL \code{Constraint} bound to \code{participantTier == COMMERCIAL} (or \code{ACADEMIC}), evaluated by \code{ParticipantTierFunction}.
-  \item A \emph{Duty} requiring an \code{attribution} declaration, evaluated by \code{AttributionDutyFunction} on every contract use.
+  \item A \emph{Permission} with an ODRL \code{Constraint} bound to
+    \code{participantTier == COMMERCIAL} (or \code{ACADEMIC}), evaluated by
+    \code{ParticipantTierFunction}.
+  \item A \emph{Duty} requiring an \code{attribution} declaration,
+    evaluated by \code{AttributionDutyFunction} on every contract use.
 \end{itemize}
 
-Both are attached to assets at offer-creation time via the management API.
+Both are attached to assets at offer-creation time via the EDC
+management API.
 
 % =============================================================================
 \section{Data}
+\label{sec:data}
 
-\todo{Flesh this section out with: exact KMB endpoints, polling cadence, sample fields, licence, and a small table of the 10 assets currently visible in the federated catalog (pulled from \code{screenshots/14-federated-crawler.txt}).}
+\subsection{Sources}
+
+The dataspace mixes three categories of data: live external feeds, snapshot
+files of public Hong Kong transport data, and synthetic but realistic
+research archives.
+
+\begin{itemize}
+  \item \textbf{Live KMB ETA / routes}: pulled at request time from the
+    public KMB open-data endpoint at \code{data.etabus.gov.hk}~\cite{kmb-od}.
+    Latencies are typically below 200~ms; a single ETA request returns
+    roughly $350$~KB of JSON, a single route request roughly $250$~KB.
+  \item \textbf{HK Transport Department incidents} and \textbf{MTR
+    patronage}: stored as static JSON files under the provider connector's
+    asset registry. The schemas mirror the published HKTD and MTR open-data
+    formats; the snapshots are dated to allow reproducibility.
+  \item \textbf{HKU research archive}: a synthetic but realistic CSV
+    representing a transit-equity study, registered as the HKU dual-role
+    asset (\code{hku-transit-equity-2026}).
+\end{itemize}
+
+\subsection{Asset inventory}
+
+The federated catalog crawler observed the twelve datasets shown in
+Table~\ref{tab:assets} during the run captured in
+\code{screenshots/14-federated-crawler.txt}. Multiple connectors share the
+\code{asset-1} / \code{asset-2} naming convention because each was seeded
+with the canonical demo identifiers; the federation index disambiguates
+them by provider name.
 
 \begin{table}[h]
 \small
-\begin{tabularx}{\linewidth}{@{}clXll@{}}
+\caption{Federated catalog inventory. All entries are
+\code{dcat:Dataset} offers exposed via the DSP catalog endpoint.}
+\label{tab:assets}
+\begin{tabularx}{\linewidth}{@{}c l l X@{}}
 \toprule
-\textbf{\#} & \textbf{Asset name} & \textbf{Owner connector} & \textbf{Source} & \textbf{Format} \\
+\textbf{\#} & \textbf{Provider} & \textbf{Asset ID} & \textbf{Description} \\
 \midrule
-1 & kmb-eta-live & provider-qna & data.etabus.gov.hk & JSON \\
-2 & kmb-route-master & provider-qna & data.etabus.gov.hk & JSON \\
-\dots & & & & \\
+1  & \code{qna}            & \code{asset-1}                    & KMB live route master (1{,}611 routes) \\
+2  & \code{qna}            & \code{asset-2}                    & KMB real-time ETA (sensitive; tier-gated) \\
+3  & \code{qna}            & \code{asset-1-push}               & KMB route master, push variant \\
+4  & \code{qna}            & \code{asset-tiny-push}            & Small JSON sample for push smoke test \\
+5  & \code{qna}            & \code{asset-with-attribution}     & Carries an attribution duty (Demo~7) \\
+6  & \code{manufacturing}  & \code{asset-1}                    & HK Transport Department open dataset \\
+7  & \code{manufacturing}  & \code{asset-2}                    & HK Transport Department incidents \\
+8  & \code{manufacturing}  & \code{hk-traffic-incidents}       & Real-time traffic incident snapshots \\
+9  & \code{manufacturing}  & \code{mtr-patronage}              & MTR daily patronage statistics \\
+10 & \code{manufacturing}  & \code{hk-academic-research-archive} & Cross-cited research dataset \\
+11 & \code{catalog-server} & \code{normal-asset-1}             & Catalog-server-resident demo asset \\
+12 & \code{hku}            & \code{hku-transit-equity-2026}    & HKU dual-role research archive \\
 \bottomrule
 \end{tabularx}
 \end{table}
 
 % =============================================================================
 \section{Evaluation}
+\label{sec:eval}
 
-We exercise the system through seven scripted demonstrations, all under \code{final/scripts/}. Each captures evidence to \code{final/screenshots/} so results are reproducible after the fact.
+We exercise the system through seven scripted demonstrations, all under
+\code{final/scripts/}. Each captures evidence to \code{final/screenshots/}
+so results are reproducible after the fact. The scripts are listed in
+Appendix~\ref{app:scripts}.
 
 \subsection{Demo~1 --- Negotiation and HTTP-PULL transfer}
 
-\code{demo-l2-transfer.sh}. Consumer fetches the catalog from the Catalog Server, selects the KMB live-ETA offer, negotiates a contract, requests a transfer in pull mode, exchanges an EDR, and finally pulls live KMB JSON from the provider's data plane.
+\code{demo-l2-transfer.sh}. HKTaxi's connector fetches the catalog from
+the Catalog Server, selects the KMB live-ETA offer, negotiates a
+contract, requests a transfer in pull mode, exchanges an EDR, and
+finally pulls live KMB JSON from the provider's data plane. The full
+seven-step flow is shown in Figure~\ref{fig:pipeline}.
 
-\noindent\textbf{Evidence:} \code{01-catalog.json}, \code{02-negotiation-finalized.json}, \code{03-transfer-started.json}, \code{04-edr.json}, \code{05-real-kmb-data.json}.
+\noindent\textbf{Evidence:} \code{01-catalog.json},
+\code{02-negotiation-finalized.json}, \code{03-transfer-started.json},
+\code{04-edr.json}, \code{05-real-kmb-data.json}.
 
 \subsection{Demo~2 --- Push transfer to S3 (MinIO)}
 
-\code{demo-push-s3.sh}. Same negotiation but \code{transferType: AmazonS3-PUSH}. The provider's dataplane writes a 352\,KB KMB JSON object into the MinIO bucket.
+\code{demo-push-s3.sh}. The same negotiation as Demo~1 but with
+\code{transferType: AmazonS3-PUSH}. The provider's dataplane writes a
+$352$\,KB KMB JSON object into the in-cluster MinIO bucket; the script
+verifies the object via \code{mc ls} inside the MinIO pod.
 
-\noindent\textbf{Evidence:} \code{22-s3-push-bucket-listing.json}, \code{23-s3-push-evidence.txt}.
+\noindent\textbf{Evidence:} \code{22-s3-push-bucket-listing.json},
+\code{23-s3-push-evidence.txt}.
 
 \subsection{Demo~3 --- HKU dual role}
 
-\code{demo-hku-dual-role.sh} + \code{demo-hku-as-consumer.sh}. HKU first publishes its research asset, then a different consumer (\code{alice}) negotiates with HKU, gets an EDR, and pulls the data; then HKU itself acts as a consumer and pulls KMB data from \code{provider-qna}.
+\code{demo-hku-dual-role.sh} + \code{demo-hku-as-consumer.sh}. HKU first
+publishes its research asset and exposes it via DSP; HKTaxi then
+negotiates with HKU, gets an EDR, and pulls the HKU data; finally HKU
+itself acts as a consumer and pulls KMB data from \code{provider-qna}.
+This proves both directions of the dual-role pattern in a single run.
 
-\noindent\textbf{Evidence:} \code{13a--d-*.json}, \code{16-*-catalog.json}, \code{17-*-agreement.json}, \code{18-*-data-pulled.json}.
+\noindent\textbf{Evidence:} \code{13a-hku-as-provider-catalog.json}
+through \code{13d-hku-research-data.json},
+\code{16-hku-consumer-catalog.json}, \code{17-hku-academic-agreement.json},
+\code{18-hku-academic-data-pulled.json}.
 
 \subsection{Demo~4 --- Federated catalog crawl}
 
-\code{federated-crawler.sh}. The Catalog Server's unified catalog is queried once; the result lists offers from both \code{provider-qna} and \code{hku}, demonstrating that the crawler ran and merged.
+\code{federated-crawler.sh}. The Catalog Server's unified catalog is
+queried once; the response lists offers from \code{qna},
+\code{manufacturing}, \code{catalog-server}, and \code{hku}, demonstrating
+that the crawler ran on its configured cadence and merged the four
+underlying catalogs (Table~\ref{tab:assets}).
 
 \noindent\textbf{Evidence:} \code{14-federated-crawler.txt}.
 
 \subsection{Demo~5 --- Live DCP credential issuance}
+\label{sec:eval-d5}
 
-\code{demo-live-issuance.sh}. HKU's identity hub initiates a credential request to the issuer; the DCP state machine progresses \code{CREATED $\rightarrow$ REQUESTING $\rightarrow$ REQUESTED $\rightarrow$ ISSUED} (verified by tailing identityhub logs); the resulting JWT is decoded to confirm \code{iss=issuer DID}, \code{sub=hku DID}, \code{iat=today}, and \code{vc.type} including \code{FoobarCredential}.
+\code{demo-live-issuance.sh}. HKU's identity hub initiates a
+\code{CredentialRequestMessage} to the issuer service. The DCP state
+machine progresses
+\code{CREATED}$\rightarrow$\code{REQUESTING}$\rightarrow$\code{REQUESTED}%
+$\rightarrow$\code{ISSUED}, verified by tailing the identity hub log
+filtered on the request ID. The issuer evaluates an attestation
+pipeline (Postgres membership lookup + the \code{demo} attestation
+factory) and signs a fresh \code{FoobarCredential} JWT, which is then
+pushed into HKU's wallet. The script decodes the resulting JWT and
+confirms \code{iss} = issuer DID, \code{sub} = HKU DID, \code{iat} =
+the demo's timestamp (i.e.\ not the configmap-baked \code{2023-12-12}
+of preloaded VCs), and \code{vc.type} including
+\code{FoobarCredential}.
 
 \noindent\textbf{Evidence:} \code{24-live-credential-issuance.txt}.
 
@@ -385,83 +741,179 @@ We exercise the system through seven scripted demonstrations, all under \code{fi
 \code{demo-custom-constraint.sh}. Two flows:
 
 \begin{itemize}
-  \item A consumer with \code{MembershipCredential} carrying \code{participantTier=COMMERCIAL} succeeds in pulling a \code{commercial-only} asset.
-  \item HKU (carrying \code{participantTier=ACADEMIC}) is rejected with an explicit policy-violation message when trying the same asset.
+  \item HKTaxi (\code{participantTier=COMMERCIAL}) succeeds in pulling a
+    \code{commercial-only} asset.
+  \item HKU (\code{participantTier=ACADEMIC}) is rejected with an explicit
+    policy-violation message when requesting the same asset.
 \end{itemize}
 
-This proves the rule is reading the VC claim, not the DID.
+This proves the rule reads the VC claim, not the holder DID: if it were
+reading the DID, both holders would be indistinguishable to the rule.
 
-\noindent\textbf{Evidence:} \code{08-policy-rejection.json}, \code{15-custom-constraint-rejection.json}, \code{17-hku-academic-agreement.json} (positive case for the ACADEMIC asset).
+\noindent\textbf{Evidence:} \code{08-policy-rejection.json},
+\code{15-custom-constraint-rejection.json},
+\code{17-hku-academic-agreement.json} (positive case for the ACADEMIC
+asset).
 
 \subsection{Demo~7 --- Attribution Duty}
+\label{sec:eval-d7}
 
-\code{demo-attribution-duty.sh}. The asset's policy carries a duty: ``on use, log attribution to the audit endpoint''. When the consumer satisfies the duty, the pull succeeds; when it does not, the pull is rejected.
+\code{demo-attribution-duty.sh}. The asset's policy carries a duty:
+``on use, declare an attribution string''. When the consumer satisfies
+the duty (the attribution payload is present and well-formed), the
+pull succeeds; when it does not, the pull is rejected by
+\code{AttributionDutyFunction} before reaching the data plane.
 
-\noindent\textbf{Evidence:} \code{19-attribution-duty-offer.json}, \code{20-attribution-success.json}, \code{21-attribution-rejection.json}.
-
-\figmissing{Figure 8: Screenshot grid of the seven demos' terminal outputs. Source raw screenshots already exist; only composition is needed.}
+\noindent\textbf{Evidence:} \code{19-attribution-duty-offer.json},
+\code{20-attribution-success.json}, \code{21-attribution-rejection.json}.
 
 % =============================================================================
 \section{Discussion}
+\label{sec:disc}
 
 \subsection{Problems overcome}
 
 \begin{enumerate}
-  \item \textbf{Tier-from-DID was not real policy enforcement.} Our first version matched on substrings of the holder DID. This worked but was a lie~--- the provider was trusting the \emph{name} of the participant, not a credential issued about it. Replaced with a VC-claim lookup (§5.2, \code{ParticipantTierFunction}), which required injecting the tier claim into the preloaded MembershipCredentials and re-signing them.
-  \item \textbf{DCP credential request body schema.} First attempts using \code{credentialType} returned HTTP 400. Reading the EDC end-to-end test (\code{CredentialIssuanceEndToEndTest.java}) revealed the correct shape uses \code{type} plus \code{id} referencing a credential definition.
-  \item \textbf{Issuer participant context stuck in \code{CREATED}.} The seeded issuer participant context started inactive; credential requests failed with HTTP 500 until activated via \code{POST /participants/\{ctx\}/state?isActive=true}.
-  \item \textbf{\code{AttestationPipelineImpl.evaluate} NPE for HKU.} The default seed only registered the consumer in \code{membership\_attestations}; the attestation source returned null for HKU, NPEing inside the pipeline. Inserted an HKU row with \code{membership\_type=3}.
-  \item \textbf{EDC AWS S3 module versioning.} \code{data-plane-aws-s3:0.14.1} does not exist; EDC Technology-AWS modules are versioned independently. Pinned to \code{0.7.0} and added an \code{edc-aws} version line in \code{libs.versions.toml}.
-  \item \textbf{\code{participant\_context\_id} is a legacy DID.} The issuer's Postgres still keys some tables on \code{did:web:localhost\%3A10100} from a pre-K8s seed, not on the current \code{did:web:dataspace-issuer-service\%3A10016:issuer}. Demos that touch the issuer admin API have to base64 the legacy DID.
-  \item \textbf{Custom ODRL constraints cannot be pure JSON.} Out of the box, EDC only ships a couple of built-in constraint functions; a property like \code{participantTier} requires a Java extension that registers the function with \code{PolicyEngine.registerFunction(\dots)}. This is documented in EDC but worth flagging as a real limitation for adopters who hoped policy was config-only.
+  \item \textbf{Tier-from-DID was not real policy enforcement.}
+    Our first version of the tier check matched on substrings of the
+    holder DID. This worked, but was a lie: the provider was trusting
+    the \emph{name} of the participant, not a credential issued about
+    it. We replaced it with a VC-claim lookup
+    (§\ref{sec:custom-ext}, \code{ParticipantTierFunction}), which
+    required us to inject the tier claim into the preloaded
+    \code{MembershipCredentials} and re-sign each one with the
+    issuer's Ed25519 private key.
+
+  \item \textbf{DCP credential request body schema.} First attempts
+    using \code{credentialType} as the credential descriptor returned
+    HTTP~400. Reading the EDC end-to-end test
+    (\code{tests/end2end/.../CredentialIssuanceEndToEndTest.java})
+    revealed that the correct shape uses \code{type} plus \code{id}
+    referencing a credential definition.
+
+  \item \textbf{Issuer participant context stuck in \code{CREATED}.}
+    The seeded issuer participant context started inactive; credential
+    requests failed with HTTP~500 until activated via
+    \code{POST /participants/\{ctx\}/state?isActive=true}. This is
+    not obvious from the management-API documentation but is required
+    once per fresh deployment.
+
+  \item \textbf{\code{AttestationPipelineImpl.evaluate} NPE for HKU.}
+    The default seed only registered the consumer in
+    \code{membership\_attestations}; the attestation source returned
+    \code{null} for HKU, NPEing inside the pipeline. We inserted an
+    HKU row with \code{membership\_type=3} as part of the
+    cluster bootstrap.
+
+  \item \textbf{EDC AWS S3 module versioning.}
+    \code{data-plane-aws-s3:0.14.1} does not exist on Maven Central:
+    EDC's Technology-AWS modules are versioned independently of
+    EDC core. We pinned to \code{0.7.0} and added a separate
+    \code{edc-aws} version line in \code{libs.versions.toml}. The
+    failure mode was a Gradle dependency-resolution error during
+    dataplane build, rather than a runtime bug.
+
+  \item \textbf{\code{participant\_context\_id} is a legacy DID.} The
+    issuer's Postgres still keys some tables on
+    \code{did:web:localhost\%3A10100} from a pre-K8s seed, not on the
+    current \code{did:web:dataspace-issuer-service\%3A10016:issuer}.
+    Demos that touch the issuer admin API have to base64 the legacy
+    DID for those particular path parameters.
+
+  \item \textbf{Custom ODRL constraints cannot be pure JSON.}
+    Out of the box, EDC ships only a couple of built-in constraint
+    functions; a property like \code{participantTier} requires a Java
+    extension that registers the function with
+    \code{PolicyEngine.registerFunction(\dots)}. This is documented in
+    EDC, but worth flagging as a real limitation for adopters who
+    hoped policy was config-only.
 \end{enumerate}
 
 \subsection{Limitations}
 
 \begin{itemize}
-  \item All endpoints are plain HTTP; no TLS termination, no mTLS, no certificate-based DID verification.
-  \item Single-region, single-node K3d. No HA, no backups.
-  \item All keys live in plain configmaps and Vault dev mode.
-  \item Only one ``real'' upstream is wired (KMB); MTR / HKO weather were planned but stayed at the design stage.
-  \item The Duty (§5.6 attribution) is checked synchronously by the consumer connector; real deployments would want an audit log on a separate trust domain.
+  \item All endpoints are plain HTTP; no TLS termination, no mTLS, no
+    certificate-based DID verification.
+  \item Single-region, single-node K3d. No HA, no Postgres backups.
+  \item Keys live in plain configmaps and Vault dev mode (in-memory,
+    cleared on pod restart).
+  \item Only one ``real'' upstream is wired (KMB); MTR / HKO weather
+    were planned but stayed at the design stage.
+  \item The Duty (§\ref{sec:eval-d7} attribution) is checked
+    synchronously by the consumer connector; production deployments
+    would want an audit log on a separate trust domain so that the
+    consumer cannot trivially fabricate satisfaction.
 \end{itemize}
 
 \subsection{Lessons learned}
 
 \begin{itemize}
-  \item \textbf{EDC's E2E tests are the most reliable spec.} When the docs and the code disagreed, the tests (\code{tests/end2end/...}) were always right.
-  \item \textbf{Credential plumbing is the time sink.} Policy logic took hours; getting the right VC into the right hub at the right time took days.
-  \item \textbf{\code{did:web} works locally if your DNS does.} Cluster-internal DNS plus consistent \code{did:web:<service>\%3A<port>:<id>} resolution lets us drop \code{did:key} entirely.
+  \item \textbf{EDC's E2E tests are the most reliable spec.} When
+    documentation and code disagreed, the tests under
+    \code{tests/end2end/...} were always right. This was particularly
+    true for DCP message bodies (problem~2 above).
+  \item \textbf{Credential plumbing is the time sink.} The policy
+    \emph{logic} took hours; getting the right VC into the right hub
+    at the right time, and re-signed when claims changed, took days.
+    Tooling for VC re-signing and verification would meaningfully
+    reduce the cost of running a small dataspace.
+  \item \textbf{\code{did:web} works locally if your DNS does.}
+    Cluster-internal DNS plus consistent
+    \code{did:web:<service>\%3A<port>:<id>} naming let us drop
+    \code{did:key} entirely and made every DID resolvable from any
+    other pod in the cluster.
 \end{itemize}
 
 % =============================================================================
 \section{Conclusion and Future Work}
+\label{sec:future}
 
 \subsection{Conclusion}
 
-We have built and demonstrated a federated Hong Kong transport dataspace that exercises every capability the assignment lists for Part~2~--- three participants with a dual-role actor, real data, federated catalog, advanced policy enforcement~--- plus elements of the optional Part~3 (custom contracts via custom ODRL constraints and duties). All claims are backed by reproducible scripts and captured evidence.
+We have built and demonstrated a federated Hong Kong transport
+dataspace that exercises every capability the assignment lists for
+Part~2~--- three semantic participants (one in a dual role), real
+data, a federated catalog node that crawls four providers, and
+advanced policy enforcement~--- plus elements of the optional Part~3
+in the form of custom ODRL constraints and duties expressed as Java
+extensions. All claims are backed by reproducible scripts and
+captured evidence under \code{final/screenshots/}.
 
 \subsection{Future work}
 
 \begin{itemize}
-  \item \textbf{Production hardening}~--- TLS / mTLS everywhere, KMS-backed keys, Postgres backups, Helm chart values for prod.
-  \item \textbf{More providers}~--- wire HKO weather, MTR (or a synthetic MTR feed if no API is available), and a citizen-reporting feed.
-  \item \textbf{Marketplace layer}~--- pricing, settlement, and a UI on top of the catalog (Part~3 of the assignment).
-  \item \textbf{Consent revocation}~--- surface a revocation flow for VCs and verify that connectors honour it.
-  \item \textbf{Observability}~--- Prometheus + Grafana dashboards on the connector and dataplane metrics already exposed by EDC.
-  \item \textbf{More VC types}~--- KYC, operating-licence, region-of-incorporation; let policies stack constraints on multiple VCs.
+  \item \textbf{Production hardening.} TLS / mTLS everywhere,
+    KMS-backed keys, Postgres backups, Helm chart values for prod.
+  \item \textbf{More providers.} Wire HKO weather, real MTR (or a
+    synthetic MTR feed if no API is publicly available), and a
+    citizen-reporting feed; this would also stress the federated
+    catalog crawler at a more realistic provider count.
+  \item \textbf{Marketplace layer.} Pricing, settlement, and a UI on
+    top of the catalog~--- the optional Part~3 of the assignment.
+  \item \textbf{Consent revocation.} Surface a revocation flow for
+    VCs and verify that connectors honour the revocation when a
+    previously-valid VC is invalidated mid-transfer.
+  \item \textbf{Observability.} Prometheus + Grafana dashboards on
+    the connector and dataplane metrics that EDC already exposes.
+  \item \textbf{Richer credential vocabularies.} KYC,
+    operating-licence, region-of-incorporation; let policies stack
+    constraints on multiple VCs and expose tools to compose them.
 \end{itemize}
 
 % =============================================================================
-\section{Code repository}
+\section{Code Repository}
+\label{sec:repo}
 
-The full source is at:
+The full source code is available at:
 
 \begin{center}
 \url{https://github.com/LiChudikang/csc4240-hk-federated-dataspace}
 \end{center}
 
-The repository is a fork of \code{eclipse-edc/MinimumViableDataspace} on the branch \code{main} (originally pushed as \code{csc4240-final}); the upstream remains accessible as the \code{upstream} remote for traceability. Layout:
+The repository is a fork of \code{eclipse-edc/MinimumViableDataspace}
+on \code{main} (originally pushed as \code{csc4240-final}); the
+upstream remains accessible as the \code{upstream} remote for
+traceability. Layout:
 
 \begin{lstlisting}
 csc4240-hk-federated-dataspace/        # fork of eclipse-edc/MinimumViableDataspace
@@ -474,30 +926,88 @@ csc4240-hk-federated-dataspace/        # fork of eclipse-edc/MinimumViableDatasp
 |-- launchers/dataplane/               # build.gradle.kts: + AWS S3 dataplane
 |-- gradle/libs.versions.toml          # + edc-aws version
 `-- final/                             # CSC4240 deliverables
-    |-- scripts/                       # 8 demo scripts + federated-crawler.sh
+    |-- scripts/                       # 7 demo scripts + federated-crawler.sh
     |                                  #   + minio-deploy.yaml
     |-- screenshots/                   # 24 captured evidence files
-    |-- diagrams/                      # scenario / architecture / pipeline (mmd + png)
+    |-- diagrams/                      # scenario / architecture / pipeline (.mmd + .png)
     |-- slides/                        # final-presentation.pptx
-    `-- report/                        # this report + figures
+    `-- report/                        # this report (.md and .tex)
 \end{lstlisting}
 
 % =============================================================================
-\section*{References}
-\addcontentsline{toc}{section}{References}
+\begin{thebibliography}{9}
 
-\todo{Fill in once citation style is locked. Candidates:}
+\bibitem{idsa-ram4}
+International Data Spaces Association.
+\emph{IDSA Reference Architecture Model 4.0}, 2023.
+\url{https://docs.internationaldataspaces.org/}.
 
-\begin{enumerate}
-  \item International Data Spaces Association. \emph{IDSA Reference Architecture Model 4.0}.
-  \item Eclipse Foundation. \emph{Eclipse Dataspace Components project page}. \url{https://projects.eclipse.org/projects/technology.edc}
-  \item Eclipse Foundation. \emph{Minimum Viable Dataspace repository}. \url{https://github.com/eclipse-edc/MinimumViableDataspace}
-  \item DRM Datenraum Mobilität GmbH. \emph{Mobility Data Space (MDS), Germany}.
-  \item Catena-X Automotive Network. \emph{Catena-X technical whitepaper}.
-  \item Gaia-X. \emph{Trust Framework}.
-  \item W3C. \emph{ODRL Information Model 2.2}, W3C Recommendation.
-  \item W3C. \emph{Decentralized Identifiers (DIDs) v1.0}, W3C Recommendation.
-  \item Hong Kong Government. \emph{KMB ETA open-data documentation}, \url{https://data.gov.hk}.
-\end{enumerate}
+\bibitem{edc-project}
+Eclipse Foundation.
+\emph{Eclipse Dataspace Components project page}.
+\url{https://projects.eclipse.org/projects/technology.edc}.
+
+\bibitem{edc-mvd}
+Eclipse Foundation.
+\emph{Minimum Viable Dataspace}.
+\url{https://github.com/eclipse-edc/MinimumViableDataspace}.
+
+\bibitem{mds-de}
+DRM Datenraum Mobilität GmbH.
+\emph{Mobility Data Space~--- Germany}.
+\url{https://mobility-dataspace.eu/}.
+
+\bibitem{catenax}
+Catena-X Automotive Network.
+\emph{Catena-X Operating Model and Technical Whitepaper}, 2023.
+\url{https://catena-x.net/}.
+
+\bibitem{w3c-odrl}
+World Wide Web Consortium.
+\emph{ODRL Information Model 2.2}, W3C Recommendation, 2018.
+\url{https://www.w3.org/TR/odrl-model/}.
+
+\bibitem{w3c-did}
+World Wide Web Consortium.
+\emph{Decentralized Identifiers (DIDs) v1.0}, W3C Recommendation, 2022.
+\url{https://www.w3.org/TR/did-core/}.
+
+\bibitem{w3c-vc}
+World Wide Web Consortium.
+\emph{Verifiable Credentials Data Model v2.0}, W3C Recommendation, 2024.
+\url{https://www.w3.org/TR/vc-data-model-2.0/}.
+
+\bibitem{kmb-od}
+Kowloon Motor Bus Company.
+\emph{KMB ETA Open API Specification},
+\url{https://data.etabus.gov.hk/}.
+
+\end{thebibliography}
+
+% =============================================================================
+\appendix
+\section{Demo script index}
+\label{app:scripts}
+
+\begin{table}[h]
+\small
+\caption{The eight scripts under \code{final/scripts/} that constitute
+the reproducible evaluation. \code{minio-deploy.yaml} (not listed) is
+the MinIO Kubernetes manifest required by Demo~2.}
+\begin{tabularx}{\linewidth}{@{}l l X@{}}
+\toprule
+\textbf{Demo} & \textbf{Script} & \textbf{Purpose} \\
+\midrule
+1 & \code{demo-l2-transfer.sh}        & Negotiation + HTTP-PULL transfer of live KMB ETA \\
+2 & \code{demo-push-s3.sh}            & \code{AmazonS3-PUSH} transfer to in-cluster MinIO bucket \\
+3 & \code{demo-hku-dual-role.sh}      & HKU publishes a research asset; HKTaxi pulls it \\
+3 & \code{demo-hku-as-consumer.sh}    & HKU pulls KMB data from \code{provider-qna} \\
+4 & \code{federated-crawler.sh}       & Query unified catalog after the Catalog Server crawls \\
+5 & \code{demo-live-issuance.sh}      & DCP issuance of a fresh \code{FoobarCredential} to HKU \\
+6 & \code{demo-custom-constraint.sh}  & \code{participantTier} permission: positive + negative case \\
+7 & \code{demo-attribution-duty.sh}   & Attribution duty: positive + negative case \\
+\bottomrule
+\end{tabularx}
+\end{table}
 
 \end{document}
