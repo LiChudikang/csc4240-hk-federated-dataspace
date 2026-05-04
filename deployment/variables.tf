@@ -30,3 +30,7 @@ variable "useSVE" {
   description = "If true, the -XX:UseSVE=0 switch (Scalable Vector Extensions) will be added to the JAVA_TOOL_OPTIONS. Can help on macOs on Apple Silicon processors"
   default     = false
 }
+
+variable "hku-did" {
+  default = "did:web:hku-identityhub%3A7083:hku"
+}

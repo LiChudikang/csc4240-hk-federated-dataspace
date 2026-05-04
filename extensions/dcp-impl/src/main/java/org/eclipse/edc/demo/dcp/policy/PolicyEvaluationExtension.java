@@ -46,6 +46,8 @@ public class PolicyEvaluationExtension implements ServiceExtension {
         bindPermissionFunction(MembershipCredentialEvaluationFunction.create(), CatalogPolicyContext.class, CatalogPolicyContext.CATALOG_SCOPE, MEMBERSHIP_CONSTRAINT_KEY);
 
         registerDataAccessLevelFunction();
+        registerParticipantTierFunction();
+        registerAttributionDutyFunction();
 
     }
 
@@ -55,6 +57,20 @@ public class PolicyEvaluationExtension implements ServiceExtension {
         bindDutyFunction(DataAccessLevelFunction.create(), TransferProcessPolicyContext.class, TransferProcessPolicyContext.TRANSFER_SCOPE, accessLevelKey);
         bindDutyFunction(DataAccessLevelFunction.create(), ContractNegotiationPolicyContext.class, ContractNegotiationPolicyContext.NEGOTIATION_SCOPE, accessLevelKey);
         bindDutyFunction(DataAccessLevelFunction.create(), CatalogPolicyContext.class, CatalogPolicyContext.CATALOG_SCOPE, accessLevelKey);
+    }
+
+    private void registerParticipantTierFunction() {
+        var key = ParticipantTierFunction.CONSTRAINT_KEY;
+        bindPermissionFunction(ParticipantTierFunction.create(), TransferProcessPolicyContext.class, TransferProcessPolicyContext.TRANSFER_SCOPE, key);
+        bindPermissionFunction(ParticipantTierFunction.create(), ContractNegotiationPolicyContext.class, ContractNegotiationPolicyContext.NEGOTIATION_SCOPE, key);
+        bindPermissionFunction(ParticipantTierFunction.create(), CatalogPolicyContext.class, CatalogPolicyContext.CATALOG_SCOPE, key);
+    }
+
+    private void registerAttributionDutyFunction() {
+        var key = AttributionDutyFunction.CONSTRAINT_KEY;
+        bindDutyFunction(AttributionDutyFunction.create(), TransferProcessPolicyContext.class, TransferProcessPolicyContext.TRANSFER_SCOPE, key);
+        bindDutyFunction(AttributionDutyFunction.create(), ContractNegotiationPolicyContext.class, ContractNegotiationPolicyContext.NEGOTIATION_SCOPE, key);
+        bindDutyFunction(AttributionDutyFunction.create(), CatalogPolicyContext.class, CatalogPolicyContext.CATALOG_SCOPE, key);
     }
 
     private <C extends PolicyContext> void bindPermissionFunction(AtomicConstraintRuleFunction<Permission, C> function, Class<C> contextClass, String scope, String constraintType) {
