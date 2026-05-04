@@ -9,3 +9,7 @@ out/
 
 .terraform*
 *terraform.tfstate*
+*.tfplan
+
+.DS_Store
+final/video/

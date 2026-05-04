@@ -16,7 +16,7 @@
 						"header": [],
 						"body": {
 							"mode": "raw",
-							"raw": "{\n    \"@context\": [\n        \"https://w3id.org/edc/connector/management/v0.0.1\"\n    ],\n    \"@id\": \"asset-1\",\n    \"@type\": \"Asset\",\n    \"properties\": {\n        \"description\": \"This asset requires Membership to view and negotiate.\"\n    },\n    \"dataAddress\": {\n        \"@type\": \"DataAddress\",\n        \"type\": \"HttpData\",\n        \"baseUrl\": \"https://jsonplaceholder.typicode.com/todos\",\n        \"proxyPath\": \"true\",\n        \"proxyQueryParams\": \"true\"\n    }\n}"
+							"raw": "{\n    \"@context\": [\n        \"https://w3id.org/edc/connector/management/v0.0.1\"\n    ],\n    \"@id\": \"asset-1\",\n    \"@type\": \"Asset\",\n    \"properties\": {\n        \"description\": \"HK KMB & LWB Bus Route Directory - requires Membership to view and negotiate.\"\n    },\n    \"dataAddress\": {\n        \"@type\": \"DataAddress\",\n        \"type\": \"HttpData\",\n        \"baseUrl\": \"https://data.etabus.gov.hk/v1/transport/kmb/route\",\n        \"proxyPath\": \"true\",\n        \"proxyQueryParams\": \"true\"\n    }\n}"
 						},
 						"url": {
 							"raw": "{{HOST}}/api/management/v3/assets",
@@ -40,7 +40,7 @@
 						"header": [],
 						"body": {
 							"mode": "raw",
-							"raw": "{\n    \"@context\": [\n        \"https://w3id.org/edc/connector/management/v0.0.1\"\n    ],\n    \"@id\": \"asset-2\",\n    \"@type\": \"Asset\",\n    \"properties\": {\n        \"description\": \"This asset requires Membership to view and SensitiveData credential to negotiate.\"\n    },\n    \"dataAddress\": {\n        \"@type\": \"DataAddress\",\n        \"type\": \"HttpData\",\n        \"baseUrl\": \"https://jsonplaceholder.typicode.com/todos\",\n        \"proxyPath\": \"true\",\n        \"proxyQueryParams\": \"true\"\n    }\n}"
+							"raw": "{\n    \"@context\": [\n        \"https://w3id.org/edc/connector/management/v0.0.1\"\n    ],\n    \"@id\": \"asset-2\",\n    \"@type\": \"Asset\",\n    \"properties\": {\n        \"description\": \"HK KMB Real-time Bus ETA Data - requires Membership and SensitiveData credential to negotiate.\"\n    },\n    \"dataAddress\": {\n        \"@type\": \"DataAddress\",\n        \"type\": \"HttpData\",\n        \"baseUrl\": \"https://data.etabus.gov.hk/v1/transport/kmb/route-stop\",\n        \"proxyPath\": \"true\",\n        \"proxyQueryParams\": \"true\"\n    }\n}"
 						},
 						"url": {
 							"raw": "{{HOST}}/api/management/v3/assets",
@@ -269,7 +269,7 @@
 						"header": [],
 						"body": {
 							"mode": "raw",
-							"raw": "{\n    \"@context\": [\n        \"https://w3id.org/edc/connector/management/v0.0.1\"\n    ],\n    \"@id\": \"normal-asset-1\",\n    \"@type\": \"Asset\",\n    \"properties\": {\n        \"description\": \"This is a conventional asset, not a CatalogAsset.\"\n    },\n    \"dataAddress\": {\n        \"@type\": \"DataAddress\",\n        \"type\": \"HttpData\",\n        \"baseUrl\": \"https://jsonplaceholder.typicode.com/todos\",\n        \"proxyPath\": \"true\",\n        \"proxyQueryParams\": \"true\"\n    }\n}"
+							"raw": "{\n    \"@context\": [\n        \"https://w3id.org/edc/connector/management/v0.0.1\"\n    ],\n    \"@id\": \"normal-asset-1\",\n    \"@type\": \"Asset\",\n    \"properties\": {\n        \"description\": \"HK MTR Next Train Schedule - real-time train arrival data (conventional asset).\"\n    },\n    \"dataAddress\": {\n        \"@type\": \"DataAddress\",\n        \"type\": \"HttpData\",\n        \"baseUrl\": \"https://rt.data.gov.hk/v1/transport/mtr/getSchedule.php\",\n        \"proxyPath\": \"true\",\n        \"proxyQueryParams\": \"true\"\n    }\n}"
 						},
 						"url": {
 							"raw": "{{HOST}}/api/management/v3/assets",
