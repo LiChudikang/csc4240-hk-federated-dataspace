@@ -5,7 +5,7 @@
 **Institution:** The Chinese University of Hong Kong, Shenzhen
 **Authors:** [Your Name] · [Partner Name]
 **Date:** May 2026
-**Code:** `[GitHub link — to be added once repo is published]`
+**Code:** https://github.com/LiChudikang/csc4240-hk-federated-dataspace
 
 ---
 
@@ -520,13 +520,13 @@ are backed by reproducible scripts and captured evidence.
 
 ## 10. Code repository
 
-> [TODO — replace with the GitHub URL once the repo is created.]
->
-> `https://github.com/<your-handle>/csc4240-hk-federated-dataspace`
+The full source is at:
 
-The repository is a fork of `eclipse-edc/MinimumViableDataspace` on the
-branch `csc4240-final`; upstream remains as `upstream` for traceability.
-Layout:
+**https://github.com/LiChudikang/csc4240-hk-federated-dataspace**
+
+The repository is a fork of `eclipse-edc/MinimumViableDataspace` on `main`
+(originally pushed as `csc4240-final`); the upstream remains accessible as
+the `upstream` remote for traceability. Layout:
 
 ```
 csc4240-hk-federated-dataspace/      # fork of eclipse-edc/MinimumViableDataspace
