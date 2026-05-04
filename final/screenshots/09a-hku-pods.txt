@@ -1,0 +1,6 @@
+NAME                                                   READY   STATUS    RESTARTS   AGE
+hku-controlplane-7f88857cfc-bn6hl                      1/1     Running   0          5h43m
+hku-dataplane-68b94f6888-fhcsh                         1/1     Running   0          5h43m
+hku-identityhub-546b64b8d4-j8x6v                       1/1     Running   0          5h43m
+hku-postgres-cf685ddbd-28w4s                           1/1     Running   0          5h43m
+hku-vault-0                                            1/1     Running   0          5h43m

@@ -1,0 +1,13 @@
+{
+  "@type": "DataAddress",
+  "type": "https://w3id.org/idsa/v4.1/HTTP",
+  "endpoint": "http://provider-qna-dataplane:11002/api/public",
+  "authType": "bearer",
+  "endpointType": "https://w3id.org/idsa/v4.1/HTTP",
+  "authorization": "eyJraWQiOiJkaWQ6d2ViOnByb3ZpZGVyLWlkZW50aXR5aHViJTNBNzA4Mzpwcm92aWRlciNrZXktMSIsImFsZyI6IkVTMjU2In0.eyJpc3MiOiJkaWQ6d2ViOnByb3ZpZGVyLWlkZW50aXR5aHViJTNBNzA4Mzpwcm92aWRlciIsImF1ZCI6ImRpZDp3ZWI6Y29uc3VtZXItaWRlbnRpdHlodWIlM0E3MDgzOmNvbnN1bWVyIiwic3ViIjoiZGlkOndlYjpwcm92aWRlci1pZGVudGl0eWh1YiUzQTcwODM6cHJvdmlkZXIiLCJpYXQiOjE3NzcyMjAyMTIsImp0aSI6IjdlODExNjNiLWYwNzgtNDU3OS1hYWRlLTZmZGI3NmE0OWQyOCJ9.1IgGR4Fidb7rR9IeCJty_tQNcJxGDr4gsPEHTnQrUaQQjFDPXtPTb8zb5XJh3vZkqLuNJkDwPITd5E_rJ9fv7Q",
+  "@context": {
+    "@vocab": "https://w3id.org/edc/v0.0.1/ns/",
+    "edc": "https://w3id.org/edc/v0.0.1/ns/",
+    "odrl": "http://www.w3.org/ns/odrl/2/"
+  }
+}

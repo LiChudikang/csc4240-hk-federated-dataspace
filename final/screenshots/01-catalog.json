@@ -1,0 +1,8 @@
+{
+  "participantId": "did:web:provider-identityhub%3A7083:provider",
+  "dataset_count": 2,
+  "assets": [
+    "asset-1",
+    "asset-2"
+  ]
+}

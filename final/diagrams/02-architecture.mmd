@@ -1,0 +1,59 @@
+%% K8s deployment architecture — 21 pods in mvd namespace
+graph LR
+    subgraph External["🌐 External Live API"]
+        KMB[("data.etabus.gov.hk<br/>KMB Live API")]
+    end
+
+    subgraph K8s["☸️ k3d cluster: edc-cluster (namespace: mvd)"]
+        subgraph PSide["Provider Side (HK Transport Hub - bob)"]
+            PCS["provider-catalog-server<br/>(federated catalog)"]
+            PQNA["provider-qna<br/>controlplane + dataplane"]
+            PMFG["provider-manufacturing<br/>controlplane + dataplane"]
+            PIH["provider-identityhub"]
+            PVAULT["provider-vault"]
+            PPG[("provider-postgres")]
+        end
+
+        subgraph CSide["Consumer 1: HKTaxi (alice)"]
+            CCP["consumer-controlplane"]
+            CDP["consumer-dataplane"]
+            CIH["consumer-identityhub"]
+            CVAULT["consumer-vault"]
+            CPG[("consumer-postgres")]
+        end
+
+        subgraph HSide["Consumer 2: HKU (added in final)"]
+            HCP["hku-controlplane"]
+            HDP["hku-dataplane"]
+            HIH["hku-identityhub"]
+            HVAULT["hku-vault"]
+            HPG[("hku-postgres")]
+        end
+
+        subgraph ISide["Identity"]
+            IS["dataspace-issuer-service"]
+            ISDID["dataspace-issuer-server<br/>(DID document)"]
+            IPG[("issuer-postgres")]
+        end
+
+        subgraph Edge["Ingress (nginx)"]
+            ING[/"k3d serverlb<br/>:80 :8181 :9191"/]
+        end
+    end
+
+    User(["💻 Developer / Postman"]) -->|"HTTP /consumer/cp/<br/>/hku/cp/ /provider-*/cp/"| ING
+    ING --> CCP & PCS & PQNA & PMFG & HCP & IS & ISDID & CIH & PIH & HIH
+
+    PCS & PQNA & PMFG -.->|"DSP / DCP<br/>over HTTP"| CCP
+    PCS & PQNA & PMFG -.->|"DSP / DCP<br/>over HTTP"| HCP
+
+    CDP -->|"HttpData PULL<br/>via EDR"| KMB
+    CCP <-->|"VC presentation"| CIH
+    PCS <-->|"VC verify"| PIH
+    HCP <-->|"VC presentation"| HIH
+
+    IS -.->|"issues VC"| CIH & PIH & HIH
+
+    style HSide fill:#cce5ff,stroke:#0066cc,stroke-width:2px
+    style KMB fill:#ffe5cc,stroke:#cc6600,stroke-width:2px
+    style ISide fill:#fff0cc,stroke:#cc9900

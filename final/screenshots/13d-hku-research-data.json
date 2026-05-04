@@ -1,0 +1,10 @@
+{
+  "url": "https://httpbin.org/anything/hku/transit-equity-2026",
+  "headers": {
+    "Accept-Encoding": "gzip",
+    "Host": "httpbin.org",
+    "User-Agent": "okhttp/5.1.0",
+    "X-Amzn-Trace-Id": "Root=1-69eee337-06b80a6a49b2904c1d6b6a60"
+  },
+  "args": {}
+}

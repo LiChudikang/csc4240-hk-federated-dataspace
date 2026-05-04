@@ -1,0 +1,5 @@
+{
+  "negotiationId": "6bc43480-eed2-4d36-abf2-9e8e1a5c99ec",
+  "state": "TERMINATED",
+  "errorDetail": "Failed to request contract to provider: {\"@type\":\"dspace:ContractNegotiationError\",\"dspace:code\":\"400\",\"dspace:reason\":\"Contract offer is not valid: Policy in scope contract.negotiation not fulfilled: [Duty constraint: [Constraint 'DataAccess.level' EQ 'sensitive']]\",\"@context\":{\"dcat\":\"http://www.w3.org/ns/dcat#\",\"dct\":\"http://purl.org/dc/terms/\",\"odrl\":\"http://www.w3.org/ns/odrl/2/\",\"dspace\":\"https://w3id.org/dspace/v0.8/\",\"@vocab\":\"https://w3id.org/edc/v0.0.1/ns/\",\"edc\":\"https://w3id.org/edc/v0.0.1/ns/\"}}"
+}

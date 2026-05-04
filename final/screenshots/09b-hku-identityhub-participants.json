@@ -1,0 +1,16 @@
+[
+  {
+    "participantContextId": "super-user",
+    "did": "did:web:super-user",
+    "roles": [
+      "admin"
+    ]
+  },
+  {
+    "participantContextId": "did:web:hku-identityhub%3A7083:hku",
+    "did": "did:web:hku-identityhub%3A7083:hku",
+    "roles": [
+      "academic"
+    ]
+  }
+]
