@@ -1,9 +1,9 @@
 % !TEX program = pdflatex
 % Compiles cleanly on Overleaf (TeX Live full) and any modern TeX distribution.
 %
-% Figures used:  ../diagrams/01-scenario.png
-%                ../diagrams/02-architecture.png
-%                ../diagrams/03-pipeline.png
+% Figures used:  diagrams/01-scenario.png
+%                diagrams/02-architecture.png
+%                diagrams/03-pipeline.png
 %
 % To switch the project author / partner, edit the \author{...} block below.
 
@@ -25,6 +25,7 @@
 \usepackage{caption}
 \usepackage{subcaption}
 \usepackage{titlesec}
+\usepackage{xurl}
 \usepackage{hyperref}
 
 % --- Hyperref colours ---------------------------------------------------------
@@ -38,6 +39,7 @@
   pdfsubject={Eclipse Dataspace Components, IDSA, ODRL, DCP, Verifiable Credentials},
   pdfkeywords={dataspace, EDC, MVD, ODRL, Verifiable Credentials, DCP, federated catalog, Hong Kong transport}
 }
+\pdfstringdefDisableCommands{\def\code#1{#1}}
 
 % --- Listings (used for the directory tree and short configs) -----------------
 \definecolor{codebg}{HTML}{F7F7F7}
@@ -66,13 +68,17 @@
 \setlist[itemize]{itemsep=2pt, topsep=2pt}
 \setlist[enumerate]{itemsep=2pt, topsep=2pt}
 \renewcommand{\arraystretch}{1.15}
+\setlength{\emergencystretch}{3em}
+\sloppy
+\hbadness=10000
+\hfuzz=40pt
 
 % --- Caption setup ------------------------------------------------------------
 \captionsetup[figure]{font=small,labelfont=bf,format=plain}
 \captionsetup[table]{font=small,labelfont=bf}
 
 % --- Convenience macros -------------------------------------------------------
-\newcommand{\code}[1]{\texttt{\small #1}}
+\DeclareRobustCommand{\code}[1]{\texttt{\small #1}}
 
 % =============================================================================
 % TITLE
@@ -360,7 +366,7 @@ Figure~\ref{fig:scenario}.
 
 \begin{figure}[t]
   \centering
-  \includegraphics[width=0.92\linewidth]{../diagrams/01-scenario.png}
+  \includegraphics[width=0.92\linewidth]{diagrams/01-scenario.png}
   \caption{Scenario topology. \emph{HK Transport Hub} (green) publishes four
   HK transport datasets. \emph{HKTaxi} (orange) has a commercial contract for
   the KMB routes asset but is rejected by policy when it requests the
@@ -373,7 +379,7 @@ Figure~\ref{fig:scenario}.
 
 \subsection{Actors}
 
-\begin{table}[h]
+\begin{table}[ht]
 \small
 \caption{Actors and their connectors. The semantic role names (HK Transport
 Hub, HKTaxi, HKU) drive the narrative; the connector names (\code{provider-*},
@@ -385,16 +391,16 @@ configuration and in the demo scripts.}
 \textbf{Semantic actor} & \textbf{Connector(s)} & \textbf{Role / DID (\code{did:web} resolved by cluster DNS)} \\
 \midrule
 HK Transport Hub & \code{provider-qna} & Publishes KMB ETA / route master.
-\code{did:web:provider-identityhub\%3A7083:provider} \\
+\nolinkurl{did:web:provider-identityhub\%3A7083:provider} \\
 HK Transport Hub & \code{provider-manufacturing} & Publishes HK traffic incidents,
 MTR patronage, academic-research archive. (shares the \code{provider} identity hub) \\
 HK Transport Hub & \code{provider-catalog-server} & Federated Catalog Node; periodically crawls the other connectors. \\
 HKTaxi & \code{consumer} & Commercial consumer.
-\code{did:web:consumer-identityhub\%3A7083:consumer} \\
+\nolinkurl{did:web:consumer-identityhub\%3A7083:consumer} \\
 HKU Transport Lab & \code{hku} & Academic consumer + provider (dual role).
-\code{did:web:hku-identityhub\%3A7083:hku} \\
+\nolinkurl{did:web:hku-identityhub\%3A7083:hku} \\
 Dataspace Issuer & \code{dataspace-issuer-service} & Trust anchor; issues MembershipCredentials.
-\code{did:web:dataspace-issuer-service\%3A10016:issuer} \\
+\nolinkurl{did:web:dataspace-issuer-service\%3A10016:issuer} \\
 \bottomrule
 \end{tabularx}
 \end{table}
@@ -466,7 +472,7 @@ issuance from a developer laptop.
 
 \begin{figure}[t]
   \centering
-  \includegraphics[width=0.95\linewidth]{../diagrams/02-architecture.png}
+  \includegraphics[width=0.95\linewidth]{diagrams/02-architecture.png}
   \caption{K3d deployment architecture. Each participant has its own
   control plane, data plane, identity hub, vault, and Postgres. The
   Dataspace Issuer Service issues VCs into all three identity hubs.
@@ -486,7 +492,7 @@ different VPs presented, underpins all seven evaluations in
 
 \begin{figure}[t]
   \centering
-  \includegraphics[width=0.95\linewidth]{../diagrams/03-pipeline.png}
+  \includegraphics[width=0.95\linewidth]{diagrams/03-pipeline.png}
   \caption{End-to-end pipeline of Demo~1: catalog discovery, contract
   negotiation, transfer initiation, EDR-token retrieval, and finally
   data fetch. Steps 6--7 produce the live KMB JSON. Push and live-issuance
@@ -638,7 +644,7 @@ Table~\ref{tab:assets} during the run captured in
 with the canonical demo identifiers; the federation index disambiguates
 them by provider name.
 
-\begin{table}[h]
+\begin{table}[ht]
 \small
 \caption{Federated catalog inventory. All entries are
 \code{dcat:Dataset} offers exposed via the DSP catalog endpoint.}
@@ -931,7 +937,7 @@ csc4240-hk-federated-dataspace/        # fork of eclipse-edc/MinimumViableDatasp
     |-- screenshots/                   # 24 captured evidence files
     |-- diagrams/                      # scenario / architecture / pipeline (.mmd + .png)
     |-- slides/                        # final-presentation.pptx
-    `-- report/                        # this report (.md and .tex)
+    `-- report/                        # this report (report.tex compiled to report.pdf)
 \end{lstlisting}
 
 % =============================================================================
@@ -989,7 +995,7 @@ Kowloon Motor Bus Company.
 \section{Demo script index}
 \label{app:scripts}
 
-\begin{table}[h]
+\begin{table}[ht]
 \small
 \caption{The eight scripts under \code{final/scripts/} that constitute
 the reproducible evaluation. \code{minio-deploy.yaml} (not listed) is
