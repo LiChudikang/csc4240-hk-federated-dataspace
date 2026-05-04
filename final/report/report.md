@@ -87,7 +87,7 @@ This report describes the following concrete contributions:
    (`participantTier`) backed by an EDC `AtomicConstraintRuleFunction` that
    reads tier from a *MembershipCredential* claim signed by the dataspace
    issuer, rather than substring-matching on the holder DID.
-5. An ODRL **Duty** (`ProtocolAuditFunction`) that the consumer must satisfy
+5. An ODRL **Duty** (`AttributionDutyFunction`) that the consumer must satisfy
    on every pull, demonstrating obligation-style policies.
 6. Live DCP credential issuance: HKU obtains a fresh `FoobarCredential`
    on-demand from the issuer service, exercising the
