@@ -1,0 +1,22 @@
+[
+  {
+    "asset_id": "asset-1",
+    "description": "HK KMB & LWB Bus Route Directory - requires Membership to view and negotiate.",
+    "baseUrl": "https://data.etabus.gov.hk/v1/transport/kmb/route"
+  },
+  {
+    "asset_id": "asset-2",
+    "description": "HK KMB Real-time Bus ETA Data - requires Membership and SensitiveData credential to negotiate.",
+    "baseUrl": "https://data.etabus.gov.hk/v1/transport/kmb/route-stop"
+  },
+  {
+    "asset_id": "hk-traffic-incidents",
+    "description": "HK Traffic Incident reports - academic use only.",
+    "baseUrl": "https://resource.data.one.gov.hk/td/journey-time-incident.xml"
+  },
+  {
+    "asset_id": "mtr-patronage",
+    "description": "MTR monthly station patronage - academic use only.",
+    "baseUrl": "https://opendata.mtr.com.hk/data/patronage_enquiry.csv"
+  }
+]

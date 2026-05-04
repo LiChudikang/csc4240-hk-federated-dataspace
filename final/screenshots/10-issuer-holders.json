@@ -1,0 +1,17 @@
+[
+  {
+    "holderId": "did:web:consumer-identityhub%3A7083:consumer",
+    "did": "did:web:consumer-identityhub%3A7083:consumer",
+    "holderName": "MVD Consumer Participant"
+  },
+  {
+    "holderId": "did:web:provider-identityhub%3A7083:provider",
+    "did": "did:web:provider-identityhub%3A7083:provider",
+    "holderName": "MVD Provider Participant"
+  },
+  {
+    "holderId": "did:web:hku-identityhub%3A7083:hku",
+    "did": "did:web:hku-identityhub%3A7083:hku",
+    "holderName": "HKU Transport Lab"
+  }
+]

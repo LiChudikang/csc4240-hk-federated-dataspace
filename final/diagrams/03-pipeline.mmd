@@ -1,0 +1,34 @@
+%% End-to-end EDC pipeline (the 7-step flow demo'd in Step 2)
+sequenceDiagram
+    actor HKTaxi
+    participant ConCP as Consumer<br/>Controlplane
+    participant ConDP as Consumer<br/>Dataplane
+    participant ProvCP as Provider<br/>Controlplane
+    participant ProvDP as Provider<br/>Dataplane
+    participant KMB as KMB Live API
+
+    Note over HKTaxi,KMB: 1. Catalog discovery
+    HKTaxi->>ConCP: POST /catalog/request
+    ConCP->>ProvCP: DSP catalog request
+    ProvCP-->>ConCP: dcat:dataset[asset-1, asset-2]
+    ConCP-->>HKTaxi: Available offers
+
+    Note over HKTaxi,ProvCP: 2-3. Negotiate contract
+    HKTaxi->>ConCP: POST /contractnegotiations<br/>(asset-1, offer policy)
+    ConCP->>ProvCP: DSP contract request
+    ProvCP-->>ConCP: ContractAgreement
+    ConCP-->>HKTaxi: state=FINALIZED<br/>+ contractAgreementId
+
+    Note over HKTaxi,ProvDP: 4-5. Initiate transfer
+    HKTaxi->>ConCP: POST /transferprocesses<br/>(HttpData-PULL)
+    ConCP->>ProvCP: DSP transfer request
+    ProvCP->>ProvDP: provision endpoint
+    ProvDP-->>ConCP: STARTED + EDR
+
+    Note over HKTaxi,KMB: 6-7. Pull real data
+    HKTaxi->>ConCP: GET /edrs/{id}/dataaddress
+    ConCP-->>HKTaxi: endpoint + JWT token
+    HKTaxi->>ProvDP: GET endpoint<br/>Authorization: Bearer JWT
+    ProvDP->>KMB: forward request
+    KMB-->>ProvDP: 1611 KMB routes (JSON)
+    ProvDP-->>HKTaxi: real Hong Kong bus data ✅

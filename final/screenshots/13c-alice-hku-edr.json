@@ -1,0 +1,13 @@
+{
+  "@type": "DataAddress",
+  "type": "https://w3id.org/idsa/v4.1/HTTP",
+  "endpoint": "http://hku-dataplane:11002/api/public",
+  "authType": "bearer",
+  "endpointType": "https://w3id.org/idsa/v4.1/HTTP",
+  "authorization": "eyJraWQiOiJkaWQ6d2ViOmhrdS1pZGVudGl0eWh1YiUzQTcwODM6aGt1I2tleS0xIiwiYWxnIjoiRVMyNTYifQ.eyJpc3MiOiJkaWQ6d2ViOmhrdS1pZGVudGl0eWh1YiUzQTcwODM6aGt1IiwiYXVkIjoiZGlkOndlYjpjb25zdW1lci1pZGVudGl0eWh1YiUzQTcwODM6Y29uc3VtZXIiLCJzdWIiOiJkaWQ6d2ViOmhrdS1pZGVudGl0eWh1YiUzQTcwODM6aGt1IiwiaWF0IjoxNzc3MjYzNDEyLCJqdGkiOiI2NjI5NmVjNi1iNDkxLTRkNjYtOGRjMS02ODk0N2JlOTI0OGQifQ.45Z5IWnafKGs8Dkaa4Z0T7uUvnetmGv6Ay_zlrlyeCe3uvxmGPndWfKjDEj_3cppevjY7uE_1iBnJP98KVTH0g",
+  "@context": {
+    "@vocab": "https://w3id.org/edc/v0.0.1/ns/",
+    "edc": "https://w3id.org/edc/v0.0.1/ns/",
+    "odrl": "http://www.w3.org/ns/odrl/2/"
+  }
+}

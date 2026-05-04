@@ -1,0 +1,25 @@
+=== Federated Catalog Crawler Output ===
+Demonstrates Part 2 'configurable to crawl' requirement
+Run timestamp: 2026年 4月27日 星期一 23时23分25秒 CST
+Providers configured: 4
+
+  • qna -> http://provider-qna-controlplane:8082/api/dsp
+  • manufacturing -> http://provider-manufacturing-controlplane:8082/api/dsp
+  • catalog-server -> http://provider-catalog-server-controlplane:8082/api/dsp
+  • hku -> http://hku-controlplane:8082/api/dsp
+
+=== Aggregated Federation Index ===
+PROVIDER             ASSET-ID                         TYPE
+-------------------- -------------------------------- ----
+qna                  asset-1                          dcat:Dataset
+qna                  asset-2                          dcat:Dataset
+qna                  asset-1-push                     dcat:Dataset
+qna                  asset-tiny-push                  dcat:Dataset
+qna                  asset-with-attribution           dcat:Dataset
+manufacturing        asset-1                          dcat:Dataset
+manufacturing        asset-2                          dcat:Dataset
+manufacturing        hk-traffic-incidents             dcat:Dataset
+manufacturing        mtr-patronage                    dcat:Dataset
+manufacturing        hk-academic-research-archive     dcat:Dataset
+catalog-server       normal-asset-1                   dcat:Dataset
+hku                  hku-transit-equity-2026          dcat:Dataset

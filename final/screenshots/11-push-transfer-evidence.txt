@@ -1,0 +1,17 @@
+=== Transfer state (consumer view) ===
+{
+  "state": "STARTED",
+  "type": "CONSUMER",
+  "transferType": "CONSUMER",
+  "contractId": null
+}
+
+=== Receiver log ===
+(empty log)
+
+=== Receiver last body (first 1500 chars) ===
+(no data yet)
+
+
+=== Receiver content shape ===
+(non-JSON or truncated)

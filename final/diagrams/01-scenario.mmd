@@ -1,0 +1,41 @@
+%% Hong Kong Federated Dataspace — Scenario Topology
+graph TB
+    subgraph Providers["🏢 Data Providers"]
+        HKTH["HK Transport Hub<br/><i>aggregates KMB, MTR,<br/>HK Traffic Dept open data</i>"]
+    end
+
+    subgraph Consumers["👥 Data Consumers"]
+        HKTaxi["HKTaxi<br/><i>commercial license</i><br/>route optimization"]
+        HKU["HKU Transport Lab<br/><i>academic license</i><br/>transit equity research"]
+    end
+
+    subgraph Trust["🔐 Identity Layer"]
+        Issuer["Dataspace Issuer<br/><i>issues VCs to participants</i>"]
+    end
+
+    subgraph Assets["📦 Hong Kong Open Data Assets"]
+        A1["asset-1<br/>KMB Bus Routes<br/>1611 routes"]
+        A2["asset-2<br/>KMB Real-time ETA<br/>(sensitive)"]
+        A3["hk-traffic-incidents<br/>HK Traffic Dept"]
+        A4["mtr-patronage<br/>MTR Corporation"]
+    end
+
+    Issuer -.->|VC| HKTH
+    Issuer -.->|VC| HKTaxi
+    Issuer -.->|VC| HKU
+
+    HKTH ---|publishes| A1
+    HKTH ---|publishes| A2
+    HKTH ---|publishes| A3
+    HKTH ---|publishes| A4
+
+    HKTaxi ==>|"commercial contract"| A1
+    HKTaxi -.->|"REJECTED by policy"| A2
+    HKU ==>|"academic contract"| A3
+    HKU ==>|"academic contract"| A4
+
+    style HKTaxi fill:#ffe5cc,stroke:#cc6600
+    style HKU fill:#cce5ff,stroke:#0066cc
+    style HKTH fill:#e0ffe0,stroke:#006600
+    style Issuer fill:#fff0cc,stroke:#cc9900
+    style A2 fill:#ffd6d6,stroke:#cc0000

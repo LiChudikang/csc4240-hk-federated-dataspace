@@ -1,0 +1,10 @@
+{
+  "participantId": "did:web:provider-identityhub%3A7083:provider",
+  "assets": [
+    "asset-1",
+    "asset-2",
+    "hk-traffic-incidents",
+    "mtr-patronage",
+    "hk-academic-research-archive"
+  ]
+}
