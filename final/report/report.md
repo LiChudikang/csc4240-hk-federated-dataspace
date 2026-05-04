@@ -543,7 +543,6 @@ csc4240-hk-federated-dataspace/      # fork of eclipse-edc/MinimumViableDataspac
     │                                #   + minio-deploy.yaml
     ├── screenshots/                 # 24 captured evidence files
     ├── diagrams/                    # scenario / architecture / pipeline (mmd + png)
-    ├── materials/                   # design + plan documents
     ├── slides/                      # final-presentation.pptx
     └── report/                      # this report + figures
 ```
