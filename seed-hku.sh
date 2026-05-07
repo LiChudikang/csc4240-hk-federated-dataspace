@@ -54,5 +54,20 @@ curl -sS -w '\nHTTP %{http_code}\n' \
   -H "x-api-key: $API_KEY" \
   -d "$DATA_HOLDER"
 
+
+# Step 3: Seed HKU into the issuer Postgres' membership_attestations table.
+# Without this row, AttestationPipelineImpl.evaluate() returns null when HKU
+# requests a credential, NPE-ing inside the issuer. The upstream issuer.tf
+# only seeds consumer (membership_type=1) and provider (=2); we add HKU as 3.
+echo
+echo "==> Seeding HKU into issuer-postgres membership_attestations"
+ISSUER_PG_POD=$(kubectl get pod -n mvd 2>/dev/null | awk '/issuer-postgres/ {print $1; exit}')
+if [[ -z "$ISSUER_PG_POD" ]]; then
+  echo "WARNING: issuer-postgres pod not found in namespace mvd; skipping HKU attestation seed."
+else
+  kubectl exec -n mvd "$ISSUER_PG_POD" -- psql -U issuer -d issuer -c \
+    "INSERT INTO membership_attestations (membership_type, holder_id) VALUES (3, 'did:web:hku-identityhub%3A7083:hku') ON CONFLICT (holder_id) DO NOTHING;"
+fi
+
 echo
 echo "=== HKU registration complete ==="

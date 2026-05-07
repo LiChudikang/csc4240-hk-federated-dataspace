@@ -135,7 +135,7 @@ custom ODRL policy functions that key access off issuer-attested
 verifiable-credential claims rather than off holder identifiers. We
 further demonstrate live DCP credential issuance and S3-compatible
 push transfer end-to-end. All claims are backed by seven demonstrations
-realised through eight reproducible scripts and twenty-four captured
+realised through eight reproducible scripts and twenty-eight captured
 evidence files.
 \end{abstract}
 
@@ -225,9 +225,11 @@ This report describes the following concrete contributions:
     catalog server), \emph{HKTaxi} (a commercial consumer), and \emph{HKU
     Transport Lab} (a dual-role academic participant)~--- spread across 21
     pods in a K3d cluster.
-  \item A Federated Catalog Node that periodically crawls every provider
-    connector and exposes a unified catalog containing 12 datasets across
-    4 providers (§\ref{sec:data}).
+  \item A Federated Catalog Node that aggregates the four publishing
+    connectors into a unified catalog containing 12 datasets
+    (§\ref{sec:data}); the federation is exercised via a scripted query
+    in our demo and the EDC stack also supports periodic crawling for
+    production use.
   \item Real-world data integration: live KMB ETA JSON pulled on demand from
     the public \code{data.etabus.gov.hk} endpoint, KMB route master, plus
     realistic HK Transport Department, MTR-patronage, and HKU research-archive
@@ -238,8 +240,8 @@ This report describes the following concrete contributions:
     \emph{MembershipCredential} claim issued by the dataspace issuer, rather
     than substring-matching on the holder DID.
   \item An ODRL \textbf{Duty} (\code{AttributionDutyFunction}) that the
-    consumer must satisfy on every pull, demonstrating obligation-style
-    policies.
+    consumer must satisfy at contract negotiation, demonstrating
+    obligation-style policies.
   \item Live DCP credential issuance: HKU obtains a fresh
     \code{FoobarCredential} on demand from the issuer service, exercising the
     \code{CREATED}$\rightarrow$\code{REQUESTING}$\rightarrow$\code{REQUESTED}%
@@ -393,7 +395,7 @@ HK Transport Hub & \code{provider-qna} & Publishes KMB ETA / route master.
 \nolinkurl{did:web:provider-identityhub\%3A7083:provider} \\
 HK Transport Hub & \code{provider-manufacturing} & Publishes HK traffic incidents,
 MTR patronage, academic-research archive. (shares the \code{provider} identity hub) \\
-HK Transport Hub & \code{provider-catalog-server} & Federated Catalog Node; periodically crawls the other connectors. \\
+HK Transport Hub & \code{provider-catalog-server} & Federated Catalog Node; aggregates offers from the other connectors. \\
 HKTaxi & \code{consumer} & Commercial consumer.
 \nolinkurl{did:web:consumer-identityhub\%3A7083:consumer} \\
 HKU Transport Lab & \code{hku} & Academic consumer + provider (dual role).
@@ -445,12 +447,15 @@ into each participant's identity hub via a Helm configmap, except for
 
 \subsection{Federated topology}
 
-A single Catalog Server crawls \code{provider-qna},
-\code{provider-manufacturing}, and the HKU provider-side connector at a fixed
-interval (configured via \code{edc.catalog.cache.execution.period.seconds}),
-indexes their offers, and exposes a unified catalog endpoint. A consumer
-issues a single catalog request and receives the union~--- in our deployment,
-12 offers~--- without knowing the underlying provider topology.
+A Catalog Server connector is deployed alongside the providers. The
+EDC stack supports periodic crawling configurable via
+\code{edc.catalog.cache.execution.period.seconds}, set on the
+consumer and provider runtimes for production-style operation. In our
+demonstration the four-provider federation is exercised by a scripted
+query (\code{final/scripts/federated-crawler.sh}) that asks the
+consumer's management API for the catalog of each publishing
+connector and aggregates the responses into a single 12-offer
+federation index, capturing it as evidence.
 
 % =============================================================================
 \section{System Architecture}
@@ -539,10 +544,11 @@ glue} that hooks them into EDC's \code{PolicyEngine}:
   \item \code{AttributionDutyFunction} is an
     \code{AtomicConstraintRuleFunction<Duty>}. Bound to a duty whose left
     operand is \code{attribution}, the function requires the consumer to
-    declare an attribution string before each pull and verifies that the
-    required marker is present in the duty payload. Demonstrates
-    obligation-style ODRL: the policy is satisfied not by a property of the
-    holder but by an action the holder commits to.
+    declare an attribution string at contract-negotiation time and
+    verifies that the declared value belongs to an approved-attributors
+    list. Demonstrates obligation-style ODRL: the policy is satisfied
+    not by a property of the holder but by an action the holder commits
+    to.
 
   \item \code{PolicyEvaluationExtension} (modified)~--- the existing
     \code{dcp-impl} registration extension was extended to register the two
@@ -581,12 +587,18 @@ the resulting tokens are checked into
 
 \subsection{Federated catalog crawler}
 
-The Catalog Server is configured (via
-\code{edc.catalog.cache.execution.period.seconds}) to crawl each provider
-connector at a fixed interval. Targeted DSP endpoints are listed in a
-configmap (one entry per provider); the server materialises a unified
-catalog and exposes it via the same DSP catalog endpoint that any
-single-provider connector exposes.
+The federation is exercised by a scripted query
+(\code{final/scripts/federated-crawler.sh}) that asks the consumer's
+management API to fetch the catalog of each of the four publishing
+connectors (\code{provider-qna}, \code{provider-manufacturing},
+\code{provider-catalog-server}, \code{hku}) and aggregates the
+responses into a single federation index. The same EDC runtimes also
+expose periodic crawling, configurable via
+\code{edc.catalog.cache.execution.period.seconds} on the consumer and
+provider connector runtimes; production deployments would lean on
+that path. We chose the scripted form for evidence-collection
+reproducibility~--- a single command produces a deterministic,
+inspectable federation index file.
 
 \subsection{Push transfer to S3 (MinIO)}
 
@@ -741,34 +753,58 @@ of preloaded VCs), and \code{vc.type} including
 
 \subsection{Demo~6 --- Custom Permission constraint (\code{participantTier})}
 
-\code{demo-custom-constraint.sh}. Two flows:
+\code{demo-custom-constraint.sh}. The asset
+\code{hk-academic-research-archive} on \code{provider-manufacturing}
+carries a permission with the constraint
+\code{participantTier == ACADEMIC}.
 
 \begin{itemize}
-  \item HKTaxi (\code{participantTier=COMMERCIAL}) succeeds in pulling a
-    \code{commercial-only} asset.
-  \item HKU (\code{participantTier=ACADEMIC}) is rejected with an explicit
-    policy-violation message when requesting the same asset.
+  \item HKTaxi (\code{participantTier=COMMERCIAL}) attempts to negotiate
+    a contract for the asset. The provider's PolicyEngine evaluates
+    \code{ParticipantTierFunction} against HKTaxi's
+    \emph{MembershipCredential} claim, fails the equality check, and
+    the negotiation transitions to \code{TERMINATED}.
+  \item HKU (\code{participantTier=ACADEMIC}) requesting the same asset
+    succeeds: the negotiation reaches \code{FINALIZED} and the consumer
+    pulls the data (this positive case is the same flow as Demo~3, hence
+    the shared evidence artefact below).
 \end{itemize}
 
-This proves the rule reads the VC claim, not the holder DID: if it were
-reading the DID, both holders would be indistinguishable to the rule.
+This proves the rule reads the VC claim, not the holder DID: a DID-only
+check could not distinguish two holders with comparable DID-substring
+patterns.
 
-\noindent\textbf{Evidence:} \code{08-policy-rejection.json},
-\code{15-custom-constraint-rejection.json},
-\code{17-hku-academic-agreement.json} (positive case for the ACADEMIC
-asset).
+\noindent\textbf{Evidence:} \code{15-custom-constraint-rejection.json}
+(HKTaxi denied), \code{17-hku-academic-agreement.json} (HKU accepted on
+the same asset), \code{08-policy-rejection.json} (an earlier
+DID-substring rejection captured for comparison).
 
 \subsection{Demo~7 --- Attribution Duty}
 \label{sec:eval-d7}
 
-\code{demo-attribution-duty.sh}. The asset's policy carries a duty:
-``on use, declare an attribution string''. When the consumer satisfies
-the duty (the attribution payload is present and well-formed), the
-pull succeeds; when it does not, the pull is rejected by
-\code{AttributionDutyFunction} before reaching the data plane.
+\code{demo-attribution-duty.sh}. The asset's policy carries a duty
+whose left operand is \code{attribution}; \code{AttributionDutyFunction}
+checks the declared right operand against an approved-attributors list
+and steers the contract negotiation accordingly.
 
-\noindent\textbf{Evidence:} \code{19-attribution-duty-offer.json},
-\code{20-attribution-success.json}, \code{21-attribution-rejection.json}.
+\begin{itemize}
+  \item HKTaxi negotiates the asset declaring attribution
+    \code{"HK Transport Hub"} (on the approved list); the negotiation
+    reaches \code{FINALIZED}.
+  \item HKTaxi negotiates the same asset declaring attribution
+    \code{"Unauthorized Reseller"} (not approved); the negotiation
+    transitions to \code{TERMINATED}.
+\end{itemize}
+
+Enforcement happens at contract-negotiation time, before any transfer
+is provisioned. This is sufficient to demonstrate the obligation-style
+ODRL flow; a stricter production deployment could additionally re-check
+the attribution at transfer time (\S\ref{sec:future}).
+
+\noindent\textbf{Evidence:} \code{19-attribution-duty-offer.json}
+(the offer policy with the duty visible),
+\code{20-attribution-success.json} (FINALIZED case),
+\code{21-attribution-rejection.json} (TERMINATED case).
 
 % =============================================================================
 \section{Discussion}
@@ -932,7 +968,7 @@ csc4240-hk-federated-dataspace/        # fork of eclipse-edc/MinimumViableDatasp
     |-- scripts/                       # 8 scripts implementing 7 demos
     |                                  #   (Demo 3 uses two)
     |                                  #   + minio-deploy.yaml (MinIO manifest, Demo 2)
-    |-- screenshots/                   # 24 captured evidence files
+    |-- screenshots/                   # 28 captured evidence files
     |-- diagrams/                      # scenario / architecture / pipeline (.mmd + .png)
     |-- slides/                        # final-presentation.pptx
     `-- report/                        # this report (report.tex compiled to report.pdf)

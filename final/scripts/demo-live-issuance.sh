@@ -19,8 +19,8 @@ HKU_DID="did:web:hku-identityhub%3A7083:hku"
 HKU_B64=$(echo -n "$HKU_DID" | base64)
 ISSUER_DID="did:web:dataspace-issuer-service%3A10016:issuer"
 HOLDER_PID="hku-live-$(date +%s)"
-OUT="/Users/lichudikang/MVD/final/screenshots"
-
+OUT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)/screenshots"
+mkdir -p "$OUT"
 bold() { printf "\n\033[1;36m===== %s =====\033[0m\n" "$*"; }
 
 bold "LIVE-1: HKU wallet BEFORE the request"

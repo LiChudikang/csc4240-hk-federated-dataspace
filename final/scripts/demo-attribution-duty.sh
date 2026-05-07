@@ -12,7 +12,8 @@ QNA_MGMT="http://127.0.0.1/provider-qna/cp/api/management/v3"
 CONSUMER_MGMT="http://127.0.0.1/consumer/cp/api/management/v3"
 PROVIDER_QNA_DSP="http://provider-qna-controlplane:8082/api/dsp"
 PROVIDER_DID="did:web:provider-identityhub%3A7083:provider"
-OUT=/Users/lichudikang/MVD/final/screenshots
+OUT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)/screenshots"
+mkdir -p "$OUT"
 bold() { printf "\n\033[1;36m===== %s =====\033[0m\n" "$*"; }
 post_qna() {
   curl -sS -o /tmp/atr.out -w '%{http_code}\n' -H 'Content-Type: application/json' -H "X-Api-Key: $API_KEY" -X POST "$QNA_MGMT/$1" -d "$2"

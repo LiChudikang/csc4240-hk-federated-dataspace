@@ -11,7 +11,8 @@ CONSUMER_MGMT="http://127.0.0.1/consumer/cp/api/management/v3"
 PROVIDER_QNA_DSP="http://provider-qna-controlplane:8082/api/dsp"
 PROVIDER_DID="did:web:provider-identityhub%3A7083:provider"
 
-OUT_DIR="/Users/lichudikang/MVD/final/screenshots"
+OUT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)/screenshots"
+mkdir -p "$OUT_DIR"
 mkdir -p "$OUT_DIR"
 
 bold() { printf "\n\033[1;36m===== %s =====\033[0m\n" "$*"; }

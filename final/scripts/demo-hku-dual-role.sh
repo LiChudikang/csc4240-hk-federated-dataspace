@@ -9,7 +9,8 @@ CONSUMER_MGMT="http://127.0.0.1/consumer/cp/api/management/v3"
 HKU_DSP="http://hku-controlplane:8082/api/dsp"
 HKU_DID="did:web:hku-identityhub%3A7083:hku"
 
-OUT=/Users/lichudikang/MVD/final/screenshots
+OUT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)/screenshots"
+mkdir -p "$OUT"
 bold() { printf "\n\033[1;36m===== %s =====\033[0m\n" "$*"; }
 curl_mgmt() { curl -sS -H "X-Api-Key: $API_KEY" "$@"; }
 

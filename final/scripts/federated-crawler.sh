@@ -22,7 +22,8 @@ PROVIDERS=(
 
 KEYWORD="${1:-}"
 
-OUT=/Users/lichudikang/MVD/final/screenshots
+OUT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)/screenshots"
+mkdir -p "$OUT"
 bold() { printf "\n\033[1;36m===== %s =====\033[0m\n" "$*"; }
 
 bold "Federated Crawler (run from HKTaxi/alice)"
