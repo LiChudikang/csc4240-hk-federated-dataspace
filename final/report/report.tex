@@ -35,7 +35,7 @@
   citecolor=blue!55!black,
   urlcolor=blue!55!black,
   pdftitle={A Federated Hong Kong Transport Dataspace},
-  pdfauthor={CSC4240 Final Project},
+  pdfauthor={Li Chudikang and Zhao Yuxuan},
   pdfsubject={Eclipse Dataspace Components, IDSA, ODRL, DCP, Verifiable Credentials},
   pdfkeywords={dataspace, EDC, MVD, ODRL, Verifiable Credentials, DCP, federated catalog, Hong Kong transport}
 }
@@ -87,7 +87,7 @@
 \title{%
   \vspace{-2em}%
   \textbf{A Federated Hong Kong Transport Dataspace}\\[0.4em]
-  \large{Real-World Datasets, Verifiable-Credential-Driven Policy,\\
+  {\large Real-World Datasets, Verifiable-Credential-Driven Policy,\\
   and Live Issuance on Eclipse Dataspace Components}%
 }
 \author{%
@@ -118,27 +118,23 @@
 % =============================================================================
 \begin{abstract}
 \noindent
-Hong Kong transport data is unusually rich and unusually siloed: KMB, MTR, the
-Transport Department, and the Observatory each publish open or paid feeds, but
+Hong Kong transport data is rich but siloed: KMB, MTR, the Transport
+Department, and the Observatory each publish open or paid feeds, but
 each lives behind a separate contract, rate limit, and access discipline.
-Bilateral integration does not scale, and as policy questions about privacy,
-attribution, and downstream redistribution sharpen, the gap is increasingly
-visible. We design and implement a federated Hong Kong transport dataspace on
-the Eclipse Dataspace Components (EDC) Minimum Viable Dataspace (MVD)~--- three
-participants (\emph{HK Transport Hub} as data provider, \emph{HKTaxi} as a
-commercial consumer, and \emph{HKU Transport Lab} as a dual-role academic
-participant), four connectors aggregated by a Federated Catalog Node, real
-upstream data fetched from \texttt{data.etabus.gov.hk} and synthetic but
-realistic HKU research data, two custom ODRL policy functions (a permission
-constraint and a duty) implemented as EDC \texttt{AtomicConstraintRuleFunction}s,
-verifiable-credential-driven access where the participant tier is asserted by
-the dataspace issuer rather than read from the holder DID, push transfer to
-S3-compatible storage (MinIO deployed in-cluster), and live DCP credential
-issuance that drives the issuer's
-\texttt{CREATED}$\rightarrow$\texttt{REQUESTING}$\rightarrow$\texttt{REQUESTED}%
-$\rightarrow$\texttt{ISSUED} state machine end-to-end. All claims are backed by
-seven reproducible demonstration scripts and twenty-four captured evidence
-files.
+Bilateral integration does not scale, and as policy questions about
+privacy, attribution, and downstream redistribution sharpen, the gap
+is increasingly visible.
+
+We design and implement a federated Hong Kong transport dataspace on
+the Eclipse Dataspace Components (EDC) Minimum Viable Dataspace, with
+three semantic participants (one in a dual role) spread across four
+connectors, real upstream data from \texttt{data.etabus.gov.hk}, and
+two custom ODRL policy functions that key access off issuer-attested
+verifiable-credential claims rather than off holder identifiers. We
+further demonstrate live DCP credential issuance and S3-compatible
+push transfer end-to-end. All claims are backed by seven demonstrations
+realised through eight reproducible scripts and twenty-four captured
+evidence files.
 \end{abstract}
 
 \tableofcontents
@@ -248,10 +244,10 @@ This report describes the following concrete contributions:
     $\rightarrow$\code{ISSUED} state machine end-to-end.
   \item Push transfer to S3-compatible storage (MinIO deployed in-cluster),
     exercising the EDC \code{AmazonS3-PUSH} transfer type.
-  \item Reproducible deployment: K3d + Terraform + Helm, plus a suite of
-    eight end-to-end demonstration scripts that exercise every claim above
-    and capture evidence to \code{final/screenshots/} for after-the-fact
-    inspection.
+  \item Reproducible deployment: K3d + Terraform + Helm, plus seven
+    demonstrations realised through eight scripts that exercise every
+    claim above, with evidence files captured under
+    \code{final/screenshots/} for after-the-fact inspection.
 \end{enumerate}
 
 \subsection{Report outline}
@@ -326,7 +322,8 @@ Three protocols carry all interactions in our deployment:
 Every participant has a \code{did:web} identifier resolvable, in our cluster,
 to a DID document hosting the participant's public key. The dataspace issuer
 (\code{did:web:dataspace-issuer-service\%3A10016:issuer}) issues
-\code{MembershipCredential}s naming the holder and a participant tier
+\code{MembershipCredential}s, modelled per the W3C Verifiable Credentials
+data model~\cite{w3c-vc}, naming the holder and a participant tier
 (\code{COMMERCIAL}, \code{ACADEMIC}, or \code{PROVIDER}). These credentials
 are presented as JWT verifiable presentations during DSP negotiation and are
 the input to our policy functions (§\ref{sec:custom-ext}).
@@ -422,9 +419,10 @@ listed in §\ref{sec:data}; design-wise, the assets are partitioned into:
     duty (\code{asset-with-attribution}; see §\ref{sec:eval-d7}).
 \end{itemize}
 
-\subsection{Trust architecture}
+\subsection{Credentials in this deployment}
 
-Three credential types drive policy decisions in our scenario:
+Building on the generic DID/VC trust model summarised in §\ref{sec:trust},
+three credential types drive policy decisions in our scenario:
 
 \begin{itemize}
   \item \code{DataProcessorCredential} (preloaded)~--- gates whether a
@@ -432,8 +430,11 @@ Three credential types drive policy decisions in our scenario:
   \item \code{MembershipCredential} (preloaded; carries the
     \code{participantTier} claim)~--- drives the custom permission
     constraint.
-  \item \code{FoobarCredential} (issued live during the demo)~--- exercises
-    the DCP issuance flow.
+  \item \code{FoobarCredential}\footnote{We adopt the upstream MVD's
+    \code{FoobarCredential} type for live issuance to keep the issuer
+    code unmodified; in production this would be a domain-specific type
+    such as \code{AcademicAffiliationCredential}.} (issued live during
+    the demo)~--- exercises the DCP issuance flow.
 \end{itemize}
 
 The credentials are issued at deploy time by the Dataspace Issuer Service
@@ -596,21 +597,6 @@ build. Demo~2's transfer uses
 The provider's dataplane fetches the upstream KMB JSON and writes it to
 the bucket.
 
-\subsection{ODRL policy expressions}
-
-Two non-trivial policies were authored:
-
-\begin{itemize}
-  \item A \emph{Permission} with an ODRL \code{Constraint} bound to
-    \code{participantTier == COMMERCIAL} (or \code{ACADEMIC}), evaluated by
-    \code{ParticipantTierFunction}.
-  \item A \emph{Duty} requiring an \code{attribution} declaration,
-    evaluated by \code{AttributionDutyFunction} on every contract use.
-\end{itemize}
-
-Both are attached to assets at offer-creation time via the EDC
-management API.
-
 % =============================================================================
 \section{Data}
 \label{sec:data}
@@ -673,10 +659,16 @@ them by provider name.
 \section{Evaluation}
 \label{sec:eval}
 
-We exercise the system through seven scripted demonstrations, all under
-\code{final/scripts/}. Each captures evidence to \code{final/screenshots/}
-so results are reproducible after the fact. The scripts are listed in
-Appendix~\ref{app:scripts}.
+We exercise the system through seven scripted demonstrations,
+implemented as eight scripts under \code{final/scripts/} (Demo~3 uses
+two). Each demonstration captures evidence files (JSON / plain-text
+log) under \code{final/screenshots/} so results are reproducible after
+the fact. The scripts are listed in Appendix~\ref{app:scripts}.
+
+Evaluation here is functional rather than performance-oriented;
+quantitative benchmarking is an explicit non-goal of this project, and
+where we cite numbers (payload sizes, observed latencies) they are
+single illustrative measurements, not statistical claims.
 
 \subsection{Demo~1 --- Negotiation and HTTP-PULL transfer}
 
