@@ -45,7 +45,7 @@ where possible; project-specific contributions live alongside.
 | [`final/report/report.tex`](final/report/report.tex) | LaTeX source |
 | [`final/slides/final-presentation.pptx`](final/slides/final-presentation.pptx) | Class presentation deck |
 | [`final/scripts/`](final/scripts/) | 8 reproducible end-to-end demo scripts + MinIO manifest |
-| [`final/screenshots/`](final/screenshots/) | 24 captured-evidence files |
+| [`final/screenshots/`](final/screenshots/) | 28 captured-evidence files |
 | [`final/diagrams/`](final/diagrams/) | Mermaid sources + rendered PNGs (used as Figures 1–3 in the report) |
 
 ---
@@ -70,9 +70,13 @@ credential carries `participantTier=ACADEMIC`.
 The **Dataspace Issuer Service** acts as the trust anchor and
 demonstrates live DCP credential issuance in Demo 5.
 
-A single **Federated Catalog Node** crawls every provider on a
-configurable interval and exposes a unified catalog containing 12
-datasets across 4 providers.
+A single **Federated Catalog Node** aggregates the four publishing
+connectors. In our demo the federation is exercised by a scripted
+query (`federated-crawler.sh`) that asks the consumer's management API
+to fetch and merge the four catalogs into a single 12-dataset
+federation index; the same EDC stack also supports periodic crawling
+configured via `edc.catalog.cache.execution.period.seconds` for
+production use.
 
 ---
 
@@ -147,7 +151,7 @@ csc4240-hk-federated-dataspace/        # fork of eclipse-edc/MinimumViableDatasp
     ├── scripts/                       # 8 scripts implementing 7 demos
     │                                  #   (Demo 3 uses two)
     │                                  #   + minio-deploy.yaml (MinIO manifest, Demo 2)
-    ├── screenshots/                   # 24 captured evidence files
+    ├── screenshots/                   # 28 captured evidence files
     ├── diagrams/                      # scenario / architecture / pipeline (.mmd + .png)
     ├── slides/                        # final-presentation.pptx
     └── report/                        # report.tex compiled to report.pdf

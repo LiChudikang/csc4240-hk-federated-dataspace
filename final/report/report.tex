@@ -174,8 +174,9 @@ means \emph{speaking the protocol}, not signing $N$ separate contracts.
 This project realises a small but complete federated dataspace for Hong Kong
 transport data. Concretely it must (a) instantiate the IDSA reference flow
 end-to-end with real upstream data, (b) include at least one dual-role
-participant, (c) expose a Federated Catalog Node that crawls every provider
-on a configurable interval, (d) enforce policies that key off
+participant, (c) expose a Federated Catalog Node that aggregates the
+catalogs of multiple publishing connectors, (d) enforce policies that
+key off
 \emph{verifiable-credential claims}~--- not on participant identifiers~---
 and (e) demonstrate live credential issuance over DCP. Performance
 benchmarking and production hardening (TLS, KMS-backed keys,
@@ -296,7 +297,8 @@ this project are:
   \item \textbf{Connector} (Control Plane + Data Plane)~--- speaks DSP,
     negotiates contracts, orchestrates transfers.
   \item \textbf{Catalog Server}~--- a connector specialised to act as a
-    federated catalog node, periodically crawling other connectors' offers.
+    federated catalog node; the EDC implementation supports periodic
+    crawling of other connectors' offers.
   \item \textbf{Identity Hub}~--- stores Verifiable Credentials for a
     participant; speaks DCP to credential issuers and to verifiers.
   \item \textbf{Issuer Service}~--- a standalone runtime that issues VCs
@@ -724,11 +726,13 @@ through \code{13d-hku-research-data.json},
 
 \subsection{Demo~4 --- Federated catalog crawl}
 
-\code{federated-crawler.sh}. The Catalog Server's unified catalog is
-queried once; the response lists offers from \code{qna},
-\code{manufacturing}, \code{catalog-server}, and \code{hku}, demonstrating
-that the crawler ran on its configured cadence and merged the four
-underlying catalogs (Table~\ref{tab:assets}).
+\code{federated-crawler.sh}. The script queries each publishing
+connector through the consumer's management API and aggregates the
+four responses; the resulting federation index lists offers from
+\code{qna}, \code{manufacturing}, \code{catalog-server}, and
+\code{hku}, demonstrating that the four underlying catalogs are
+reachable and aggregable into the inventory captured in
+Table~\ref{tab:assets}.
 
 \noindent\textbf{Evidence:} \code{14-federated-crawler.txt}.
 
@@ -841,8 +845,8 @@ the attribution at transfer time (\S\ref{sec:future}).
     The default seed only registered the consumer in
     \code{membership\_attestations}; the attestation source returned
     \code{null} for HKU, NPEing inside the pipeline. We inserted an
-    HKU row with \code{membership\_type=3} as part of the
-    cluster bootstrap.
+    HKU row with \code{membership\_type=3} as part of HKU seeding;
+    the \code{INSERT} is now executed by \code{seed-hku.sh}.
 
   \item \textbf{EDC AWS S3 module versioning.}
     \code{data-plane-aws-s3:0.14.1} does not exist on Maven Central:
@@ -912,8 +916,9 @@ the attribution at transfer time (\S\ref{sec:future}).
 We have built and demonstrated a federated Hong Kong transport
 dataspace that exercises every capability the assignment lists for
 Part~2~--- three semantic participants (one in a dual role), real
-data, a federated catalog node that crawls four providers, and
-advanced policy enforcement~--- plus elements of the optional Part~3
+data, a scripted federated catalog crawl across four publishing
+connectors, and advanced policy enforcement~--- plus elements of the
+optional Part~3
 in the form of custom ODRL constraints and duties expressed as Java
 extensions. All claims are backed by reproducible scripts and
 captured evidence under \code{final/screenshots/}.
