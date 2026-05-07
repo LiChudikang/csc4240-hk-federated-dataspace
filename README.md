@@ -144,8 +144,9 @@ csc4240-hk-federated-dataspace/        # fork of eclipse-edc/MinimumViableDatasp
 ├── seed-hku.sh, seed-hk-extra.sh,     # HK-scenario bootstrap scripts
 │   demo-hk-flow.sh
 └── final/                             # CSC4240 deliverables
-    ├── scripts/                       # 7 demo scripts + federated-crawler.sh
-    │                                  #   + minio-deploy.yaml
+    ├── scripts/                       # 8 scripts implementing 7 demos
+    │                                  #   (Demo 3 uses two)
+    │                                  #   + minio-deploy.yaml (MinIO manifest, Demo 2)
     ├── screenshots/                   # 24 captured evidence files
     ├── diagrams/                      # scenario / architecture / pipeline (.mmd + .png)
     ├── slides/                        # final-presentation.pptx

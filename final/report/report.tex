@@ -127,9 +127,10 @@ is increasingly visible.
 
 We design and implement a federated Hong Kong transport dataspace on
 the Eclipse Dataspace Components (EDC) Minimum Viable Dataspace, with
-three semantic participants (one in a dual role) spread across four
-connectors, real upstream data from \texttt{data.etabus.gov.hk}, and
-two custom ODRL policy functions that key access off issuer-attested
+three semantic participants (one in a dual role), a Federated Catalog
+Node aggregating four publishing connectors into a single 12-dataset
+catalog, real upstream data from \texttt{data.etabus.gov.hk}, and two
+custom ODRL policy functions that key access off issuer-attested
 verifiable-credential claims rather than off holder identifiers. We
 further demonstrate live DCP credential issuance and S3-compatible
 push transfer end-to-end. All claims are backed by seven demonstrations
@@ -662,8 +663,11 @@ them by provider name.
 We exercise the system through seven scripted demonstrations,
 implemented as eight scripts under \code{final/scripts/} (Demo~3 uses
 two). Each demonstration captures evidence files (JSON / plain-text
-log) under \code{final/screenshots/} so results are reproducible after
-the fact. The scripts are listed in Appendix~\ref{app:scripts}.
+log) under \code{final/screenshots/}\footnote{The directory is named
+\code{screenshots/} for historical reasons; in practice it contains
+JSON responses and plain-text command logs rather than screen
+captures.} so results are reproducible after the fact. The scripts
+are listed in Appendix~\ref{app:scripts}.
 
 Evaluation here is functional rather than performance-oriented;
 quantitative benchmarking is an explicit non-goal of this project, and
@@ -924,8 +928,9 @@ csc4240-hk-federated-dataspace/        # fork of eclipse-edc/MinimumViableDatasp
 |-- launchers/dataplane/               # build.gradle.kts: + AWS S3 dataplane
 |-- gradle/libs.versions.toml          # + edc-aws version
 `-- final/                             # CSC4240 deliverables
-    |-- scripts/                       # 7 demo scripts + federated-crawler.sh
-    |                                  #   + minio-deploy.yaml
+    |-- scripts/                       # 8 scripts implementing 7 demos
+    |                                  #   (Demo 3 uses two)
+    |                                  #   + minio-deploy.yaml (MinIO manifest, Demo 2)
     |-- screenshots/                   # 24 captured evidence files
     |-- diagrams/                      # scenario / architecture / pipeline (.mmd + .png)
     |-- slides/                        # final-presentation.pptx
